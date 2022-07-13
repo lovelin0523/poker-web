@@ -91,7 +91,7 @@
             </div>
         </div>
         <!-- 操作界面 -->
-        <div v-if="currentGame>0 && status[userInfo.user_id] == 0" class="app-groups">
+        <div v-if="currentGame>0 && status[userInfo.user_id] == 0 && pokers[userInfo.user_id]" class="app-groups">
             <div v-for="(item,index) in [1,2,3]" :key="'group-'+index" class="app-group">
                 <div @click="doInsert(index,i)" class="app-group-empty" v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                     <poker v-if="singlePoker(index,i,userInfo.user_id)" :value="singlePoker(index,i,userInfo.user_id).value" :type="singlePoker(index,i,userInfo.user_id).type"></poker>
@@ -110,13 +110,13 @@
             </div>
         </m-modal>
         <!-- 本房间对局结束画面 -->
-        <m-modal animation="fade" width="5.4rem" overlay-color="transparent" modal-color="rgba(0,0,0,.5)" color="#fff" title="最终战绩" title-class="mvi-text-center" v-model="endShow">
+        <m-modal animation="fade" width="5.4rem" overlay-color="transparent" modal-color="rgba(0,0,0,.8)" color="#fff" title="最终战绩" title-class="mvi-text-center" v-model="endShow">
             <div v-for="(item,key,index) in scores" :key="index" class="app-result">
                 <div>{{showUser(key)?.user_nickname}}</div>
                 <div>{{item>0?'+':''}}{{item}}</div>
             </div>
             <div slot="footer" class="app-end-footer">
-                <m-button color="rgba(23,81,108,0.4)" form-control @click="goBack">确认</m-button>
+                <m-button color="rgba(23,81,108,0.8)" form-control @click="goBack">确认</m-button>
             </div>
         </m-modal>
     </div>
@@ -138,7 +138,7 @@ export default {
             wsUrl:
                 process.env.NODE_ENV == 'production'
                     ? 'wss://www.mvi-web.cn/poker_ws'
-                    : 'ws://192.168.70.92:3041',
+                    : 'ws://192.168.1.3:3041',
             //房间信息
             room: null,
             //玩家用户数组
@@ -241,6 +241,10 @@ export default {
         },
         //结束
         sendOver() {
+            this.$showToast({
+                type: 'loading',
+                message: '正在获取结果...'
+            })
             //房主发送结束
             if (this.userInfo.user_id == this.room.room_creator) {
                 this.send({
@@ -258,11 +262,10 @@ export default {
                 this.sendOver()
                 return
             }
-            this.$msgbox('即将进入下一局')
-            this.compare = false
-            //房主发送
-            if (this.userInfo.user_id == this.room.room_creator) {
-                setTimeout(() => {
+            this.$msgbox('即将进入下一局', () => {
+                this.compare = false
+                //房主发送
+                if (this.userInfo.user_id == this.room.room_creator) {
                     this.currentGame += 1
                     this.send({
                         type: 7,
@@ -270,11 +273,12 @@ export default {
                         user: this.userInfo,
                         content: '下一局'
                     })
-                }, 2000)
-            }
+                }
+            })
         },
         //推送比试
         sendCompare(group) {
+            console.log('推送笔试函数sendCompare执行')
             //房主发送比试推送
             if (this.userInfo.user_id == this.room.room_creator) {
                 this.send({
@@ -288,6 +292,7 @@ export default {
         },
         //配牌完成
         completePlat() {
+            console.log('全部配牌完成函数completePlat')
             //展开所有的牌
             this.compare = true
             //发送比试推送
@@ -475,19 +480,26 @@ export default {
             else if (data.type == 1) {
                 console.log('加入房间通知', data)
                 this.users = data.data.users
-                this.pokers = data.data.pokers || {}
                 this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
+                const pokers = data.data.pokers || {}
+                //如果是我自己加入房间的通知
+                if (data.data.isSelf) {
+                    this.pokers = pokers
+                } else {
+                    this.pokers = this.updateOtherPokers(pokers)
+                }
             }
             //离开房间
             else if (data.type == 2) {
                 console.log('离开房间通知', data)
                 this.users = data.data.users
-                this.pokers = data.data.pokers || {}
                 this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
+                const pokers = data.data.pokers || {}
+                this.pokers = this.updateOtherPokers(pokers)
             }
             //游戏开始
             else if (data.type == 3) {
@@ -502,30 +514,28 @@ export default {
             else if (data.type == 4) {
                 console.log('配牌完成', data)
                 this.users = data.data.users
-                this.pokers = data.data.pokers || {}
                 this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
-
-                //判断是否全部配牌完成
-                let flag = true
-                for (let key in this.status) {
-                    if (this.status[key] == 0) {
-                        flag = false
-                        break
-                    }
+                const pokers = data.data.pokers || {}
+                //如果是自己配牌完成了
+                if (data.data.isSelf) {
+                    this.pokers = pokers
+                } else {
+                    this.pokers = this.updateOtherPokers(pokers)
                 }
-                if (flag) {
-                    setTimeout(() => {
+                //如果全部配牌完成
+                if (data.data.hasAllComplete) {
+                    this.$msgbox('所有人都已经配好，即将进行比牌', () => {
                         this.completePlat()
-                    }, 1000)
+                    })
                 }
             }
             //配牌不符合规矩
             else if (data.type == 5) {
                 console.log('配牌不符合规矩', data)
                 this.users = data.data.users
-                this.pokers = data.data.pokers || {}
+                // this.pokers = data.data.pokers || {}
                 this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
@@ -551,7 +561,7 @@ export default {
                         const group = this.group + 1
                         this.sendCompare(group)
                     }
-                }, 2000)
+                }, 3000)
             }
             //下一局
             else if (data.type == 7) {
@@ -564,11 +574,9 @@ export default {
             }
             //结束
             else if (data.type == 8) {
+                this.$hideToast()
                 console.log('本房间游戏结束', data)
                 this.users = data.data.users
-                this.pokers = data.data.pokers || {}
-                this.status = data.data.status || {}
-                this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
                 this.endShow = true
             }
@@ -599,6 +607,18 @@ export default {
                 })
             }
             return -1
+        },
+        //更新其他人的pokers
+        updateOtherPokers(pokers) {
+            //我的pokers
+            const myPokers = this.pokers[this.userInfo.user_id]
+            let newPokers = {}
+            newPokers[this.userInfo.user_id] = myPokers
+            //更新其他人的pokers
+            this.otherUsers.forEach(user => {
+                newPokers[user.user_id] = pokers[user.user_id]
+            })
+            return newPokers
         }
     }
 }
