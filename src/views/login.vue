@@ -28,6 +28,10 @@ export default {
             }
         }
     },
+    created() {
+        this.form.user_name = localStorage.getItem('pokers-username') || ''
+        this.form.user_password = localStorage.getItem('pokers-password') || ''
+    },
     methods: {
         login() {
             setTimeout(() => {
@@ -56,6 +60,15 @@ export default {
                             const userInfo = res.data.user
                             this.$store.commit('userInfo', userInfo)
                             this.$store.commit('token', token)
+                            //记住账号和密码
+                            localStorage.setItem(
+                                'pokers-username',
+                                this.form.user_name
+                            )
+                            localStorage.setItem(
+                                'pokers-password',
+                                this.form.user_password
+                            )
                             this.$router.replace({
                                 path: '/'
                             })

@@ -100,27 +100,27 @@
                 <div @click="doInsert(index,i)" class="app-group-empty" v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                     <poker v-if="singlePoker(index,i,userInfo.user_id)" :value="singlePoker(index,i,userInfo.user_id).value" :type="singlePoker(index,i,userInfo.user_id).type"></poker>
                 </div>
-                <m-button @click="removeAll(index)" size="small" round color="#0f7c94">
+                <m-button class="app-group-btn" @click="removeAll(index)" size="small" round :color="$var.darker">
                     <m-icon type="times"></m-icon>
                 </m-button>
             </div>
-            <m-button @click="doConfirmPokers" class="mvi-mt-4" color="#033b47" form-control>确认</m-button>
+            <m-button @click="doConfirmPokers" class="mvi-mt-8" :color="$var.darker" form-control>确认</m-button>
         </div>
         <!-- 比试结果界面 -->
-        <m-modal animation="fade" width="5.4rem" overlay-color="transparent" modal-color="rgba(0,0,0,.5)" color="#fff" v-model="resultShow" :title="'第'+ (group+1) +'组'" title-class="mvi-text-center">
+        <m-modal animation="fade" width="5.4rem" overlay-color="rgba(0,0,0,.6)" :modal-color="$var.basic" color="#ddd" v-model="resultShow" :title="'第'+ (group+1) +'组'" title-class="mvi-text-center mvi-font-h5" radius="0.4rem">
             <div v-for="(item,key,index) in tempScores" :key="index" class="app-result">
                 <div>{{showUser(key)?.user_nickname}}</div>
                 <div>{{item>0?'+':''}}{{item}}</div>
             </div>
         </m-modal>
         <!-- 本房间对局结束画面 -->
-        <m-modal animation="fade" width="5.4rem" overlay-color="transparent" modal-color="rgba(0,0,0,.8)" color="#fff" title="最终战绩" title-class="mvi-text-center" v-model="endShow">
+        <m-modal animation="fade" width="5.4rem" overlay-color="rgba(0,0,0,.6)" :modal-color="$var.basic" color="#ddd" title="最终战绩" title-class="mvi-text-center" v-model="endShow">
             <div v-for="(item,key,index) in scores" :key="index" class="app-result">
                 <div>{{showUser(key)?.user_nickname}}</div>
                 <div>{{item>0?'+':''}}{{item}}</div>
             </div>
             <div slot="footer" class="app-end-footer">
-                <m-button color="rgba(23,81,108,0.8)" form-control @click="goBack">确认</m-button>
+                <m-button :color="$var.dark" form-control @click="goBack">确认</m-button>
             </div>
         </m-modal>
     </div>
@@ -231,7 +231,7 @@ export default {
         //结果显示的用户
         showUser() {
             return user_id => {
-                return this.users.filter(user => {
+                return this.userInfos.filter(user => {
                     return user.user_id == user_id
                 })[0]
             }
@@ -765,10 +765,10 @@ export default {
 }
 .app-groups {
     display: block;
-    width: 5.2rem;
-    background-color: #4b8c9b;
+    width: 5.6rem;
+    background-color: @dark;
     border-radius: 0.12rem;
-    padding: 0.2rem;
+    padding: 0.4rem;
     box-shadow: 0.02rem 0.02rem rgba(0, 0, 0, 0.2);
     position: fixed;
     left: 50%;
@@ -782,8 +782,10 @@ export default {
         align-items: center;
         width: 100%;
         margin-bottom: 0.1rem;
+        position: relative;
+        padding-right: 1rem;
 
-        &:last-child {
+        &:last-of-type {
             margin-bottom: 0;
         }
 
@@ -791,7 +793,7 @@ export default {
             display: block;
             width: 0.96rem;
             height: 1.18rem;
-            background-color: #0f7c94;
+            background-color: @basic;
             border-radius: 0.12rem;
             position: relative;
 
@@ -800,6 +802,11 @@ export default {
                 left: 0;
                 top: 0;
             }
+        }
+
+        .app-group-btn {
+            position: absolute;
+            right: 0;
         }
     }
 }
@@ -824,6 +831,7 @@ export default {
     width: 100%;
     margin-bottom: 0.2rem;
     padding: 0 0.6rem;
+    font-size: 0.32rem;
 
     &:last-child {
         margin-bottom: 0;
@@ -844,6 +852,7 @@ export default {
         padding-left: 0.4rem;
         width: 50%;
         text-align: right;
+        font-weight: bold;
     }
 }
 

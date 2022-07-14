@@ -5,7 +5,7 @@ export default [
         component: () =>
             import(/* webpackChunkName:"index" */ '../views/index'),
         meta: {
-            title: '大厅 - 大家来比鸡',
+            title: '主页 - 大家来比鸡',
             auth: true
         }
     },
