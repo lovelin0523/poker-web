@@ -16,5 +16,7 @@ export default {
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
+    background-color: @basic;
+    color: #fff;
 }
 </style>

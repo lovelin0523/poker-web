@@ -1,15 +1,17 @@
 <template>
-    <div class="mvi-pt-20">
+    <div class="app-main">
         <div class="mvi-text-center mvi-mb-4">
-            <m-image width="2rem" height="2rem" fit="fill" src="/poker/logo.png"></m-image>
+            <m-image width="2.4rem" height="2.4rem" fit="fill" src="/poker/logo.png"></m-image>
         </div>
-        <h3 class="mvi-text-sub mvi-text-center mvi-mb-8">LOGIN FOR PLAY</h3>
-        <m-input clearable border size="large" v-model.trim="form.user_name" placeholder="输入账号"></m-input>
-        <m-input clearable size="large" v-model.trim="form.user_password" type="password" placeholder="输入密码"></m-input>
-        <div class="mvi-pt-8 mvi-px-2">
-            <m-button @click="login" form-control size="large" type="info">登录</m-button>
+        <h3 class="app-title">LOGIN FOR PLAY</h3>
+        <div class="mvi-px-2">
+            <m-input class="app-input" clearable border size="large" v-model.trim="form.user_name" placeholder="输入账号" left-icon="user"></m-input>
+            <m-input class="app-input" clearable size="large" v-model.trim="form.user_password" type="password" placeholder="输入密码" left-icon="lock"></m-input>
         </div>
-        <div @click="goRegister" class="mvi-text-center mvi-mt-10 mvi-text-link mvi-font-h6">
+        <div class="mvi-pt-8 mvi-px-2 mvi-mb-10">
+            <m-button @click="login" form-control size="large" :color="$var.darker">登录</m-button>
+        </div>
+        <div @click="goRegister" class="app-register">
             <span class="mvi-mr-1">注册新账号</span>
             <m-icon type="angle-double-right"></m-icon>
         </div>
@@ -30,11 +32,11 @@ export default {
         login() {
             setTimeout(() => {
                 if (!this.form.user_name) {
-                    this.$msgbox('请输入账号')
+                    this.$util.msgbox('请输入账号')
                     return
                 }
                 if (!this.form.user_password) {
-                    this.$msgbox('请输入密码')
+                    this.$util.msgbox('请输入密码')
                     return
                 }
                 this.$ruax
@@ -42,10 +44,7 @@ export default {
                         url: this.$api.login,
                         data: this.form,
                         beforeSend: () => {
-                            this.$showToast({
-                                type: 'loading',
-                                message: '正在登录...'
-                            })
+                            this.$util.showLoading('正在登录...')
                         },
                         complete: () => {
                             this.$hideToast()
@@ -61,7 +60,7 @@ export default {
                                 path: '/'
                             })
                         } else if (res.state == 301) {
-                            this.$msgbox(res.message)
+                            this.$util.msgbox(res.message)
                         }
                     })
             }, 200)
@@ -76,4 +75,34 @@ export default {
 }
 </script>
 <style lang="less" scoped>
+.app-main {
+    display: block;
+    width: 100%;
+    min-height: 100%;
+    padding-top: 2rem;
+
+    .app-title {
+        color: #ddd;
+        text-align: center;
+        margin-bottom: 0.8rem;
+    }
+    .app-input {
+        background-color: @dark;
+        color: #ebedf0;
+
+        &:first-child {
+            border-radius: 0.12rem 0.12rem 0 0;
+        }
+
+        &:last-child {
+            border-radius: 0 0 0.12rem 0.12rem;
+        }
+    }
+
+    .app-register {
+        text-align: center;
+        font-size: 0.32rem;
+        color: @light;
+    }
+}
 </style>

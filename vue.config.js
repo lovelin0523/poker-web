@@ -8,11 +8,11 @@ module.exports = {
         port: 8888, // 端口
         https: false,
         disableHostCheck: true,
-        open: true
+        open: false
     },
     chainWebpack: config => {
         config.plugin('html').tap(args => {
-            args[0].title = '扑克牌比鸡游戏'
+            args[0].title = '大家来比鸡'
             return args
         })
     },
@@ -23,6 +23,12 @@ module.exports = {
                 vue$: 'vue/dist/vue.esm.js',
                 '@': path.join(__dirname, 'src')
             }
+        }
+    },
+    pluginOptions: {
+        'style-resources-loader': {
+            preProcessor: 'less',
+            patterns: [path.resolve(__dirname, './src/assets/variables.less')]
         }
     }
 }

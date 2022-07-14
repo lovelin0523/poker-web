@@ -1,15 +1,21 @@
 <template>
-    <div class="mvi-pt-12">
+    <div class="app-main">
         <div class="mvi-text-center mvi-mb-4">
-            <m-image width="2rem" height="2rem" fit="fill" src="/poker/logo.png"></m-image>
+            <m-image width="2.4rem" height="2.4rem" fit="fill" src="/poker/logo.png"></m-image>
         </div>
-        <h3 class="mvi-text-sub mvi-text-center mvi-mb-8">REGISTER FOR PLAY</h3>
-        <m-input clearable border size="large" v-model.trim="form.user_nickname" placeholder="设置昵称，最多8个字符"></m-input>
-        <m-input clearable border size="large" v-model.trim="form.user_name" placeholder="设置账号，4-16个字母、数字和下划线"></m-input>
-        <m-input clearable size="large" border v-model.trim="form.user_password" type="password" placeholder="设置密码，不少于8位"></m-input>
-        <m-input clearable size="large" v-model.trim="form.user_password2" type="password" placeholder="再次输入密码进行确认"></m-input>
-        <div class="mvi-pt-8 mvi-px-2">
-            <m-button @click="register" form-control size="large" type="info">注册</m-button>
+        <h3 class="app-title">REGISTER FOR PLAY</h3>
+        <div class="mvi-px-2">
+            <m-input class="app-input" clearable border size="large" v-model.trim="form.user_nickname" placeholder="设置昵称，最多8个字符" left-icon="user"></m-input>
+            <m-input class="app-input" clearable border size="large" v-model.trim="form.user_name" placeholder="设置账号，4-16个字母、数字和下划线" left-icon="user"></m-input>
+            <m-input class="app-input" clearable size="large" border v-model.trim="form.user_password" type="password" placeholder="设置密码，不少于8位" left-icon="lock"></m-input>
+            <m-input class="app-input" clearable size="large" v-model.trim="form.user_password2" type="password" placeholder="再次输入密码进行确认" left-icon="lock"></m-input>
+        </div>
+        <div class="mvi-pt-8 mvi-px-2 mvi-mb-10">
+            <m-button @click="register" form-control size="large" :color="$var.darker">注册</m-button>
+        </div>
+        <div @click="goLogin" class="app-login">
+            <m-icon type="angle-double-left"></m-icon>
+            <span class="mvi-ml-1">返回登录</span>
         </div>
     </div>
 </template>
@@ -27,22 +33,27 @@ export default {
         }
     },
     methods: {
+        goLogin() {
+            this.$router.replace({
+                path: '/login'
+            })
+        },
         register() {
             setTimeout(() => {
                 if (!this.form.user_nickname) {
-                    this.$msgbox('请设置昵称')
+                    this.$util.msgbox('请设置昵称')
                     return
                 }
                 if (!this.form.user_name) {
-                    this.$msgbox('请设置账号')
+                    this.$util.msgbox('请设置账号')
                     return
                 }
                 if (!this.form.user_password) {
-                    this.$msgbox('请设置密码')
+                    this.$util.msgbox('请设置密码')
                     return
                 }
                 if (this.form.user_nickname.length > 8) {
-                    this.$msgbox('昵称最多8个字符')
+                    this.$util.msgbox('昵称最多8个字符')
                     return
                 }
                 if (
@@ -51,19 +62,21 @@ export default {
                         'userName'
                     )
                 ) {
-                    this.$msgbox('账号限制在4-16位，仅限字母数字或者下划线')
+                    this.$util.msgbox(
+                        '账号限制在4-16位，仅限字母数字或者下划线'
+                    )
                     return
                 }
                 if (this.form.user_password.length < 8) {
-                    this.$msgbox('密码不少于8个字符')
+                    this.$util.msgbox('密码不少于8个字符')
                     return
                 }
                 if (!this.form.user_password2) {
-                    this.$msgbox('请再次确认密码')
+                    this.$util.msgbox('请再次确认密码')
                     return
                 }
                 if (this.form.user_password != this.form.user_password2) {
-                    this.$msgbox('两次密码输入不一致')
+                    this.$util.msgbox('两次密码输入不一致')
                     return
                 }
                 delete this.form.user_password2
@@ -72,10 +85,7 @@ export default {
                         url: this.$api.register,
                         data: this.form,
                         beforeSend: () => {
-                            this.$showToast({
-                                type: 'loading',
-                                message: '注册中...'
-                            })
+                            this.$util.showLoading('注册中...')
                         },
                         complete: () => {
                             this.$hideToast()
@@ -83,18 +93,11 @@ export default {
                     })
                     .then(res => {
                         if (res.state == 200) {
-                            this.$showToast({
-                                type: 'success',
-                                message: '注册成功',
-                                timeout: 1000,
-                                callback: () => {
-                                    this.$router.replace({
-                                        path: '/login'
-                                    })
-                                }
+                            this.$util.showSuccess('注册成功', () => {
+                                this.goLogin()
                             })
                         } else if (res.state == 301) {
-                            this.$msgbox(res.message)
+                            this.$util.msgbox(res.message)
                         }
                     })
             }, 200)
@@ -103,4 +106,35 @@ export default {
 }
 </script>
 <style lang="less" scoped>
+.app-main {
+    display: block;
+    width: 100%;
+    min-height: 100%;
+    padding-top: 1.2rem;
+
+    .app-title {
+        color: #ddd;
+        text-align: center;
+        margin-bottom: 0.8rem;
+    }
+
+    .app-input {
+        background-color: @dark;
+        color: #ebedf0;
+
+        &:first-child {
+            border-radius: 0.12rem 0.12rem 0 0;
+        }
+
+        &:last-child {
+            border-radius: 0 0 0.12rem 0.12rem;
+        }
+    }
+
+    .app-login {
+        text-align: center;
+        font-size: 0.32rem;
+        color: @light;
+    }
+}
 </style>

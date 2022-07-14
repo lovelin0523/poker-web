@@ -1,8 +1,12 @@
 <template>
     <div class="app-main">
+        <!-- 解散房间 -->
+        <m-button v-if="room && userInfo.user_id == room.room_creator" @click="dissolution" class="app-switch" round size="small">
+            <m-icon type="switch"></m-icon>
+        </m-button>
         <!-- 开始游戏 -->
         <div v-if="currentGame==0 && room && room.room_creator==userInfo.user_id" class="app-room-start">
-            <m-button @click="startGame" size="large" square class="mvi-text-bold" color="#287e91">Start Game</m-button>
+            <m-button @click="startGame" size="large" square class="mvi-text-bold" :color="$var.dark">开始游戏</m-button>
         </div>
         <!-- 房间信息 -->
         <div class="app-room-info">
@@ -30,7 +34,7 @@
                 <m-overlay local :show="currentGame>0 && !pokers[userInfo.user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div>{{userInfo.user_nickname}}<span v-if="$dap.number.isNumber(scores[userInfo.user_id])">（{{scores[userInfo.user_id]}}）</span></div>
+                <div>{{userInfo.user_nickname}}<span v-if="$dap.number.isNumber(scores[userInfo.user_id])">({{scores[userInfo.user_id]}})</span></div>
             </div>
         </div>
         <!-- 第二个 -->
@@ -39,7 +43,7 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[0].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div>{{otherUsers[0].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[0].user_id])">（{{scores[otherUsers[0].user_id]}}）</span></div>
+                <div>{{otherUsers[0].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[0].user_id])">({{scores[otherUsers[0].user_id]}})</span></div>
             </div>
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[0].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
@@ -53,7 +57,7 @@
             </div>
         </div>
         <!-- 第三个 -->
-        <div v-if="otherUsers[1]" class="app-third" :style="{left:currentGame>0 && status[otherUsers[1].user_id] == 1?'-1.2rem':''}">
+        <div v-if="otherUsers[1]" class="app-third" :style="{left:currentGame>0 ? (status[otherUsers[1].user_id] == 1?'-1.2rem':'-2.2rem'):''}">
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[1].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
@@ -68,11 +72,11 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[1].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div>{{otherUsers[1].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[1].user_id])">（{{scores[otherUsers[1].user_id]}}）</span></div>
+                <div>{{otherUsers[1].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[1].user_id])">({{scores[otherUsers[1].user_id]}})</span></div>
             </div>
         </div>
         <!-- 第四个 -->
-        <div v-if="otherUsers[2]" class="app-fouth" :style="{right:currentGame>0 && status[otherUsers[2].user_id] == 1?'-1.2rem':''}">
+        <div v-if="otherUsers[2]" class="app-fouth" :style="{left:currentGame>0 ? (status[otherUsers[2].user_id] == 1?'-1.2rem':'-2.2rem'):''}">
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[2].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
@@ -87,7 +91,7 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[2].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div>{{otherUsers[2].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[2].user_id])">（{{scores[otherUsers[2].user_id]}}）</span></div>
+                <div>{{otherUsers[2].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[2].user_id])">({{scores[otherUsers[2].user_id]}})</span></div>
             </div>
         </div>
         <!-- 操作界面 -->
@@ -135,10 +139,7 @@ export default {
             //心跳检测计时器
             timer: null,
             //socket地址
-            wsUrl:
-                process.env.NODE_ENV == 'production'
-                    ? 'wss://www.mvi-web.cn/poker_ws'
-                    : 'ws://192.168.1.3:3041',
+            wsUrl: process.env.VUE_APP_WS,
             //房间信息
             room: null,
             //玩家用户数组
@@ -233,6 +234,23 @@ export default {
         this.checkRoom()
     },
     methods: {
+        //解散房间
+        dissolution() {
+            this.$confirm({
+                title: '提示',
+                message: '确定要解散该房间吗？',
+                callback: r => {
+                    if (r) {
+                        this.send({
+                            type: 8,
+                            room: this.roomId,
+                            user: this.userInfo,
+                            content: '解散房间'
+                        })
+                    }
+                }
+            })
+        },
         //游戏结束返回
         goBack() {
             this.$router.replace({
@@ -248,7 +266,7 @@ export default {
             //房主发送结束
             if (this.userInfo.user_id == this.room.room_creator) {
                 this.send({
-                    type: 8,
+                    type: 7,
                     room: this.roomId,
                     user: this.userInfo,
                     content: '此房间已结束'
@@ -268,7 +286,7 @@ export default {
                 if (this.userInfo.user_id == this.room.room_creator) {
                     this.currentGame += 1
                     this.send({
-                        type: 7,
+                        type: 6,
                         room: this.roomId,
                         user: this.userInfo,
                         content: '下一局'
@@ -282,7 +300,7 @@ export default {
             //房主发送比试推送
             if (this.userInfo.user_id == this.room.room_creator) {
                 this.send({
-                    type: 6,
+                    type: 5,
                     room: this.roomId,
                     user: this.userInfo,
                     content: `比试第${group + 1}组`,
@@ -424,9 +442,9 @@ export default {
         onError(code) {
             console.log('WebSocket连接发生错误', code)
             this.$alert({
-                title: '连接发生错误，点击下方确认按钮，刷新页面重新进入',
+                title: '提示',
                 ios: true,
-                message: '',
+                message: '连接发生错误，点击下方确认按钮，刷新页面重新进入',
                 callback: () => {
                     location.reload(true)
                 }
@@ -462,15 +480,16 @@ export default {
             const data = JSON.parse(event.data)
             //异常处理
             if (data.type == -1) {
-                this.$msgbox(data.content)
-                if (data.data.needRefresh) {
-                    if (this.webSocket) {
-                        this.webSocket.close()
+                this.$msgbox(data.content, () => {
+                    if (data.data.needRefresh) {
+                        if (this.webSocket) {
+                            this.webSocket.close()
+                        }
+                        this.$router.replace({
+                            path: '/'
+                        })
                     }
-                    this.$router.replace({
-                        path: '/'
-                    })
-                }
+                })
             }
             //心跳检测
             else if (data.type == 0) {
@@ -531,18 +550,8 @@ export default {
                     })
                 }
             }
-            //配牌不符合规矩
-            else if (data.type == 5) {
-                console.log('配牌不符合规矩', data)
-                this.users = data.data.users
-                // this.pokers = data.data.pokers || {}
-                this.status = data.data.status || {}
-                this.currentGame = data.data.currentGame || 0
-                this.scores = data.data.scores || {}
-                this.$msgbox(data.content)
-            }
             //比试
-            else if (data.type == 6) {
+            else if (data.type == 5) {
                 console.log('比试完成', data)
                 this.users = data.data.users
                 this.pokers = data.data.pokers || {}
@@ -564,7 +573,7 @@ export default {
                 }, 3000)
             }
             //下一局
-            else if (data.type == 7) {
+            else if (data.type == 6) {
                 console.log('下一局开始', data)
                 this.users = data.data.users
                 this.pokers = data.data.pokers || {}
@@ -573,12 +582,27 @@ export default {
                 this.scores = data.data.scores || {}
             }
             //结束
-            else if (data.type == 8) {
+            else if (data.type == 7) {
                 this.$hideToast()
                 console.log('本房间游戏结束', data)
                 this.users = data.data.users
                 this.scores = data.data.scores || {}
                 this.endShow = true
+            }
+            //解散
+            else if (data.type == 8) {
+                console.log('房间解散', data)
+                this.users = data.data.users
+                this.$alert({
+                    ios: true,
+                    title: '提示',
+                    message: '房间已解散',
+                    callback: () => {
+                        this.$router.replace({
+                            path: '/'
+                        })
+                    }
+                })
             }
         },
         //连接关闭的回调方法
@@ -628,7 +652,6 @@ export default {
 .app-main {
     position: relative;
     height: 100%;
-    background-color: #085e71;
 
     .app-room-start {
         position: absolute;
@@ -651,11 +674,19 @@ export default {
         width: 6rem;
         text-align: center;
     }
+
+    .app-switch {
+        position: fixed;
+        right: 0.1rem;
+        top: 0.1rem;
+        z-index: 300;
+        opacity: 0.4;
+    }
 }
 .app-first {
     display: block;
     position: absolute;
-    bottom: 0;
+    bottom: 0.2rem;
     left: 50%;
     transform: translateX(-50%);
     padding: 0.2rem;
@@ -681,9 +712,6 @@ export default {
         font-size: 0.32rem;
         color: #fff;
         width: 3rem;
-        background-color: #0f7c94;
-        padding: 0.1rem 0.2rem;
-        border-radius: 0.12rem;
         margin: 0 auto;
         position: relative;
         overflow: hidden;
@@ -718,9 +746,6 @@ export default {
         font-size: 0.32rem;
         color: #fff;
         width: 3rem;
-        background-color: #1ca92f;
-        padding: 0.1rem 0.2rem;
-        border-radius: 0.12rem;
         margin: 0 auto;
         position: relative;
         overflow: hidden;
@@ -730,7 +755,7 @@ export default {
     display: block;
     position: absolute;
     top: 50%;
-    left: -2rem;
+    left: -2.8rem;
     transform: translateY(-50%) rotate(90deg);
     padding: 0.2rem;
     z-index: 10;
@@ -755,9 +780,6 @@ export default {
         font-size: 0.32rem;
         color: #fff;
         width: 3rem;
-        background-color: #0e958a;
-        padding: 0.1rem 0.2rem;
-        border-radius: 0.12rem;
         margin: 0 auto;
         position: relative;
         overflow: hidden;
@@ -767,7 +789,7 @@ export default {
     display: block;
     position: absolute;
     top: 50%;
-    right: -2rem;
+    right: -2.8rem;
     transform: translateY(-50%) rotate(-90deg);
     padding: 0.2rem;
     z-index: 10;

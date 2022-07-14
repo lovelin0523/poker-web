@@ -3,12 +3,8 @@ import store from '../store'
 import router from '../router'
 
 let ruax = new Ruax()
-
 //设置请求基本路径
-ruax.defaults.baseUrl =
-    process.env.NODE_ENV == 'production'
-        ? 'https://www.mvi-web.cn/poker_api'
-        : 'http://192.168.1.3:3040/api'
+ruax.defaults.baseUrl = process.env.VUE_APP_BASEURL
 //设置请求方式
 ruax.defaults.type = 'POST'
 //设置超时时间30s

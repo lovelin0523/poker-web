@@ -5,7 +5,7 @@ export default [
         component: () =>
             import(/* webpackChunkName:"index" */ '../views/index'),
         meta: {
-            title: '大厅 - 扑克牌比鸡游戏',
+            title: '大厅 - 大家来比鸡',
             auth: true
         }
     },
@@ -15,7 +15,7 @@ export default [
         component: () =>
             import(/* webpackChunkName:"login" */ '../views/login'),
         meta: {
-            title: '登录 - 扑克牌比鸡游戏'
+            title: '登录 - 大家来比鸡'
         }
     },
     {
@@ -24,7 +24,7 @@ export default [
         component: () =>
             import(/* webpackChunkName:"register" */ '../views/register'),
         meta: {
-            title: '注册 - 扑克牌比鸡游戏'
+            title: '注册 - 大家来比鸡'
         }
     },
     {
@@ -32,7 +32,7 @@ export default [
         name: 'room',
         component: () => import(/* webpackChunkName:"room" */ '../views/room'),
         meta: {
-            title: '扑克牌比鸡游戏',
+            title: '大家来比鸡',
             auth: true
         }
     }
