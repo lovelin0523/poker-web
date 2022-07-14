@@ -43,7 +43,7 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[0].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div>{{otherUsers[0].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[0].user_id])">({{scores[otherUsers[0].user_id]}})</span></div>
+                <div :class="(isOnline(otherUsers[0])?'':'app-offline')">{{otherUsers[0].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[0].user_id])">({{isOnline(otherUsers[0])?scores[otherUsers[0].user_id]:'已离线'}})</span></div>
             </div>
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[0].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
@@ -72,7 +72,7 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[1].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div>{{otherUsers[1].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[1].user_id])">({{scores[otherUsers[1].user_id]}})</span></div>
+                <div :class="(isOnline(otherUsers[1])?'':'app-offline')">{{otherUsers[1].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[1].user_id])">({{isOnline(otherUsers[1])?scores[otherUsers[1].user_id]:'已离线'}})</span></div>
             </div>
         </div>
         <!-- 第四个 -->
@@ -91,7 +91,7 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[2].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div>{{otherUsers[2].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[2].user_id])">({{scores[otherUsers[2].user_id]}})</span></div>
+                <div :class="(isOnline(otherUsers[2])?'':'app-offline')">{{otherUsers[2].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[2].user_id])">({{isOnline(otherUsers[2])?scores[otherUsers[2].user_id]:'已离线'}})</span></div>
             </div>
         </div>
         <!-- 操作界面 -->
@@ -163,7 +163,9 @@ export default {
             //结果弹窗控制
             resultShow: false,
             //结束弹窗
-            endShow: false
+            endShow: false,
+            //用户信息集合
+            userInfos: []
         }
     },
     components: {
@@ -180,6 +182,11 @@ export default {
         },
         //其他玩家
         otherUsers() {
+            if (this.userInfos.length) {
+                return this.userInfos.filter(item => {
+                    return item.user_id != this.userInfo.user_id
+                })
+            }
             return this.users.filter(item => {
                 return item.user_id != this.userInfo.user_id
             })
@@ -228,6 +235,14 @@ export default {
                     return user.user_id == user_id
                 })[0]
             }
+        },
+        //是否在线
+        isOnline() {
+            return user => {
+                return this.users.some(item => {
+                    return item.user_id == user.user_id
+                })
+            }
         }
     },
     mounted() {
@@ -252,62 +267,6 @@ export default {
             this.$router.replace({
                 path: '/'
             })
-        },
-        //结束
-        sendOver() {
-            this.$util.showLoading('正在获取结果...')
-            //房主发送结束
-            if (this.userInfo.user_id == this.room.room_creator) {
-                this.send({
-                    type: 7,
-                    room: this.roomId,
-                    user: this.userInfo,
-                    content: '此房间已结束'
-                })
-            }
-        },
-        //进入下一局
-        sendNextGame() {
-            //已经是最后一局则结束
-            if (this.currentGame == this.room.room_mode) {
-                this.sendOver()
-                return
-            }
-            this.$util.msgbox('即将进入下一局', () => {
-                this.compare = false
-                //房主发送
-                if (this.userInfo.user_id == this.room.room_creator) {
-                    this.currentGame += 1
-                    this.send({
-                        type: 6,
-                        room: this.roomId,
-                        user: this.userInfo,
-                        content: '下一局'
-                    })
-                }
-            })
-        },
-        //推送比试
-        sendCompare(group) {
-            console.log('推送笔试函数sendCompare执行')
-            //房主发送比试推送
-            if (this.userInfo.user_id == this.room.room_creator) {
-                this.send({
-                    type: 5,
-                    room: this.roomId,
-                    user: this.userInfo,
-                    content: `比试第${group + 1}组`,
-                    group: group
-                })
-            }
-        },
-        //配牌完成
-        completePlat() {
-            console.log('全部配牌完成函数completePlat')
-            //展开所有的牌
-            this.compare = true
-            //发送比试推送
-            this.sendCompare(0)
         },
         //将一道纸牌全部撤回
         removeAll(index) {
@@ -484,6 +443,7 @@ export default {
                 this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
+                this.userInfos = data.data.userInfos || []
                 const pokers = data.data.pokers || {}
                 //如果是我自己加入房间的通知
                 if (data.data.isSelf) {
@@ -501,6 +461,7 @@ export default {
                 this.scores = data.data.scores || {}
                 const pokers = data.data.pokers || {}
                 this.pokers = this.updateOtherPokers(pokers)
+                this.userInfos = data.data.userInfos || []
             }
             //游戏开始
             else if (data.type == 3) {
@@ -510,6 +471,7 @@ export default {
                 this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
+                this.userInfos = data.data.userInfos || []
             }
             //配牌完成
             else if (data.type == 4) {
@@ -525,11 +487,10 @@ export default {
                 } else {
                     this.pokers = this.updateOtherPokers(pokers)
                 }
-                //如果全部配牌完成
+                //如果全部配牌完成，后端会自动进行比牌
                 if (data.data.hasAllComplete) {
-                    this.$util.msgbox('所有人都已经配好，即将进行比牌', () => {
-                        this.completePlat()
-                    })
+                    this.$util.msgbox('所有人都已经配好，即将进行比牌')
+                    this.compare = true
                 }
             }
             //比试
@@ -543,16 +504,6 @@ export default {
                 this.group = data.data.group || 0
                 this.tempScores = data.data.tempScores || {}
                 this.resultShow = true
-                setTimeout(() => {
-                    //已经是最后一组，则进入下一局
-                    if (this.group == 2) {
-                        this.resultShow = false
-                        this.sendNextGame()
-                    } else {
-                        const group = this.group + 1
-                        this.sendCompare(group)
-                    }
-                }, 3000)
             }
             //下一局
             else if (data.type == 6) {
@@ -562,10 +513,12 @@ export default {
                 this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
+                this.compare = false
+                this.resultShow = false
+                this.$util.msgbox(`第${this.currentGame}局开始`)
             }
             //结束
             else if (data.type == 7) {
-                this.$hideToast()
                 console.log('本房间游戏结束', data)
                 this.users = data.data.users
                 this.scores = data.data.scores || {}
@@ -897,5 +850,9 @@ export default {
 .app-end-footer {
     display: block;
     width: 100%;
+}
+
+.app-offline {
+    opacity: 0.4;
 }
 </style>

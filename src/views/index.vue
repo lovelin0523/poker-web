@@ -75,8 +75,7 @@ export default {
                 user_password: '',
                 user_password2: ''
             },
-            modeArray: [8, 12, 16, 20],
-            playsArray: [2, 3, 4],
+            modeArray: [3, 12, 16, 20],
             roomShow: false,
             attendShow: false,
             attendRoomId: '',
