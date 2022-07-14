@@ -1,5 +1,6 @@
 <template>
     <div v-on="listeners" class="app-poker">
+        <div v-if="active" class="app-poker-active"></div>
         <div class="app-poker-bg" :style="style"></div>
     </div>
 </template>
@@ -9,7 +10,7 @@ export default {
     name: 'poker',
     data() {
         return {
-            isSelected: false
+            active: false
         }
     },
     props: {
@@ -54,123 +55,123 @@ export default {
             let left = ''
             let top = ''
             if (this.cover) {
-                top = '-4.92rem'
-                left = '-2rem'
+                top = '-6.4rem'
+                left = '-2.6rem'
             } else if (this.type == 0) {
-                top = '-3.7rem'
+                top = '-4.82rem'
                 if (this.value == 'A') {
-                    left = '-0.02rem'
+                    left = '-0.04rem'
                 } else if (this.value == '2') {
-                    left = '-1rem'
+                    left = '-1.32rem'
                 } else if (this.value == '3') {
-                    left = '-1.99rem'
+                    left = '-2.6rem'
                 } else if (this.value == '4') {
-                    left = '-2.97rem'
+                    left = '-3.9rem'
                 } else if (this.value == '5') {
-                    left = '-3.96rem'
+                    left = '-5.18rem'
                 } else if (this.value == '6') {
-                    left = '-4.94rem'
+                    left = '-6.46rem'
                 } else if (this.value == '7') {
-                    left = '-5.93rem'
+                    left = '-7.74rem'
                 } else if (this.value == '8') {
-                    left = '-6.92rem'
+                    left = '-9.02rem'
                 } else if (this.value == '9') {
-                    left = '-7.9rem'
+                    left = '-10.32rem'
                 } else if (this.value == '10') {
-                    left = '-8.88rem'
+                    left = '-11.61rem'
                 } else if (this.value == 'J') {
-                    left = '-9.86rem'
+                    left = '-12.88rem'
                 } else if (this.value == 'Q') {
-                    left = '-10.85rem'
+                    left = '-14.2rem'
                 } else if (this.value == 'K') {
-                    left = '-11.83rem'
+                    left = '-15.46rem'
                 }
             } else if (this.type == 1) {
-                top = '-2.48rem'
+                top = '-3.22rem'
                 if (this.value == 'A') {
-                    left = '-0.02rem'
+                    left = '-0.04rem'
                 } else if (this.value == '2') {
-                    left = '-1rem'
+                    left = '-1.32rem'
                 } else if (this.value == '3') {
-                    left = '-1.99rem'
+                    left = '-2.6rem'
                 } else if (this.value == '4') {
-                    left = '-2.97rem'
+                    left = '-3.9rem'
                 } else if (this.value == '5') {
-                    left = '-3.96rem'
+                    left = '-5.18rem'
                 } else if (this.value == '6') {
-                    left = '-4.94rem'
+                    left = '-6.46rem'
                 } else if (this.value == '7') {
-                    left = '-5.93rem'
+                    left = '-7.74rem'
                 } else if (this.value == '8') {
-                    left = '-6.92rem'
+                    left = '-9.02rem'
                 } else if (this.value == '9') {
-                    left = '-7.9rem'
+                    left = '-10.32rem'
                 } else if (this.value == '10') {
-                    left = '-8.88rem'
+                    left = '-11.61rem'
                 } else if (this.value == 'J') {
-                    left = '-9.86rem'
+                    left = '-12.88rem'
                 } else if (this.value == 'Q') {
-                    left = '-10.85rem'
+                    left = '-14.2rem'
                 } else if (this.value == 'K') {
-                    left = '-11.84rem'
+                    left = '-15.46rem'
                 }
             } else if (this.type == 2) {
-                top = '-1.24rem'
+                top = '-1.62rem'
                 if (this.value == 'A') {
-                    left = '-0.02rem'
+                    left = '-0.04rem'
                 } else if (this.value == '2') {
-                    left = '-1rem'
+                    left = '-1.32rem'
                 } else if (this.value == '3') {
-                    left = '-1.99rem'
+                    left = '-2.6rem'
                 } else if (this.value == '4') {
-                    left = '-2.97rem'
+                    left = '-3.9rem'
                 } else if (this.value == '5') {
-                    left = '-3.96rem'
+                    left = '-5.18rem'
                 } else if (this.value == '6') {
-                    left = '-4.94rem'
+                    left = '-6.46rem'
                 } else if (this.value == '7') {
-                    left = '-5.93rem'
+                    left = '-7.74rem'
                 } else if (this.value == '8') {
-                    left = '-6.92rem'
+                    left = '-9.02rem'
                 } else if (this.value == '9') {
-                    left = '-7.9rem'
+                    left = '-10.32rem'
                 } else if (this.value == '10') {
-                    left = '-8.88rem'
+                    left = '-11.61rem'
                 } else if (this.value == 'J') {
-                    left = '-9.86rem'
+                    left = '-12.88rem'
                 } else if (this.value == 'Q') {
-                    left = '-10.85rem'
+                    left = '-14.2rem'
                 } else if (this.value == 'K') {
-                    left = '-11.83rem'
+                    left = '-15.46rem'
                 }
             } else {
                 top = '-0.02rem'
                 if (this.value == 'A') {
-                    left = '-0.02rem'
+                    left = '-0.04rem'
                 } else if (this.value == '2') {
-                    left = '-1rem'
+                    left = '-1.32rem'
                 } else if (this.value == '3') {
-                    left = '-1.99rem'
+                    left = '-2.6rem'
                 } else if (this.value == '4') {
-                    left = '-2.97rem'
+                    left = '-3.9rem'
                 } else if (this.value == '5') {
-                    left = '-3.96rem'
+                    left = '-5.18rem'
                 } else if (this.value == '6') {
-                    left = '-4.94rem'
+                    left = '-6.46rem'
                 } else if (this.value == '7') {
-                    left = '-5.93rem'
+                    left = '-7.74rem'
                 } else if (this.value == '8') {
-                    left = '-6.92rem'
+                    left = '-9.02rem'
                 } else if (this.value == '9') {
-                    left = '-7.9rem'
+                    left = '-10.32rem'
                 } else if (this.value == '10') {
-                    left = '-8.88rem'
+                    left = '-11.61rem'
                 } else if (this.value == 'J') {
-                    left = '-9.86rem'
+                    left = '-12.88rem'
                 } else if (this.value == 'Q') {
-                    left = '-10.85rem'
+                    left = '-14.2rem'
                 } else if (this.value == 'K') {
-                    left = '-11.83rem'
+                    left = '-15.46rem'
                 }
             }
             return {
@@ -186,21 +187,32 @@ export default {
 .app-poker {
     display: block;
     position: relative;
-    width: 0.96rem;
-    height: 1.18rem;
+    width: 1.2rem;
+    height: 1.54rem;
     overflow: hidden;
     border-radius: 0.06rem;
     border: 1px solid #ddd;
     transition: margin-top 300ms;
+    z-index: 10;
 }
 
 .app-poker-bg {
     display: block;
     position: absolute;
     z-index: 1;
-    width: 12.8rem;
-    height: 6.12rem;
+    width: 16.7rem;
+    height: 7.98rem;
     background: url(/poker/poker.webp) no-repeat center;
     background-size: cover;
+}
+
+.app-poker-active {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
 }
 </style>

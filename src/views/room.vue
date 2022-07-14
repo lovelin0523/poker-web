@@ -20,8 +20,8 @@
         </div>
         <!-- 自己 -->
         <div v-if="userInfo" class="app-first">
-            <div class="app-pokers">
-                <poker @click="selectPoker(item)" ref="unGroupPokers" v-for="(item,index) in unGroupPokers(userInfo.user_id)" :key="index" :value="item.value" :type="item.type" :style="pokerStyle(item)"></poker>
+            <div class="app-pokers" @touchstart="pokerTouch(0,$event)" @touchmove="pokerTouch(1,$event)" @touchend="pokerTouch(2,$event)">
+                <poker ref="unGroupPokers" v-for="(item,index) in unGroupPokers(userInfo.user_id)" :key="index" :value="item.value" :type="item.type" :style="pokerStyle(item)"></poker>
             </div>
             <div v-if="currentGame>0 && status[userInfo.user_id] == 1" class="app-prepare">
                 <div v-for="(item,index) in [1,2,3]" :key="'group-'+index">
@@ -97,14 +97,14 @@
         <!-- 操作界面 -->
         <div v-if="currentGame>0 && status[userInfo.user_id] == 0 && pokers[userInfo.user_id]" class="app-groups">
             <div v-for="(item,index) in [1,2,3]" :key="'group-'+index" class="app-group">
-                <div @click="doInsert(index,i)" class="app-group-empty" v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
+                <div class="app-group-empty" @click="insertOrRemove(index,i)" v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                     <poker v-if="singlePoker(index,i,userInfo.user_id)" :value="singlePoker(index,i,userInfo.user_id).value" :type="singlePoker(index,i,userInfo.user_id).type"></poker>
                 </div>
                 <m-button class="app-group-btn" @click="removeAll(index)" size="small" round :color="$var.darker">
                     <m-icon type="times"></m-icon>
                 </m-button>
             </div>
-            <m-button @click="doConfirmPokers" class="mvi-mt-8" :color="$var.darker" form-control>确认</m-button>
+            <m-button @click="doConfirmPokers" class="mvi-mt-4" :color="$var.darker" form-control>确认</m-button>
         </div>
         <!-- 比试结果界面 -->
         <m-modal animation="fade" width="5.4rem" overlay-color="rgba(0,0,0,.6)" :modal-color="$var.basic" color="#ddd" v-model="resultShow" :title="'第'+ (group+1) +'组'" title-class="mvi-text-center mvi-font-h5" radius="0.4rem">
@@ -153,7 +153,7 @@ export default {
             //当前局数，0表示还没有开始
             currentGame: 0,
             //被选择的未分组纸牌
-            selectedPoker: null,
+            selectedPokers: [],
             //是否开始比牌
             compare: false,
             //比试组数，0表示第一组，1表示第二组，2表示第三组
@@ -165,7 +165,9 @@ export default {
             //结束弹窗
             endShow: false,
             //用户信息集合
-            userInfos: []
+            userInfos: [],
+            //开始触摸坐标记录
+            touchPoints: [-1, -1]
         }
     },
     components: {
@@ -206,11 +208,10 @@ export default {
         pokerStyle() {
             return item => {
                 let style = {}
-                if (
-                    this.selectedPoker &&
-                    item.type == this.selectedPoker.type &&
-                    item.value == this.selectedPoker.value
-                ) {
+                const flag = this.selectedPokers.some(poker => {
+                    return item.type == poker.type && item.value == poker.value
+                })
+                if (flag) {
                     style.marginTop = '-0.6rem'
                 }
                 return style
@@ -249,6 +250,209 @@ export default {
         this.checkRoom()
     },
     methods: {
+        //放入或者移出纸牌
+        insertOrRemove(index, i) {
+            //获取选择的牌的长度
+            const selectedLength = this.selectedPokers.length
+            //获取该组位置上是否有牌
+            const tempPoker = this.pokers[this.userInfo.user_id].filter(
+                item => {
+                    return item.belong[0] == index && item.belong[1] == i
+                }
+            )[0]
+            //选择了牌
+            if (selectedLength > 0) {
+                //选择的牌数量超过3
+                if (selectedLength.length > 3) {
+                    if (selectedLength > 3) {
+                        this.$util.msgbox('一组最多只能放入3张牌噢')
+                        this.selectedPokers = []
+                        return
+                    }
+                }
+                //如果只有一个
+                if (selectedLength == 1) {
+                    //获取这个被选择的牌的序列
+                    const order = this.pokers[this.userInfo.user_id].findIndex(
+                        item => {
+                            return (
+                                item.type == this.selectedPokers[0].type &&
+                                item.value == this.selectedPokers[0].value
+                            )
+                        }
+                    )
+                    //该位置有牌则清空该位置
+                    if (tempPoker) {
+                        //获取该位置的牌在数组的序列
+                        const tempIndex = this.pokers[
+                            this.userInfo.user_id
+                        ].findIndex(item => {
+                            return (
+                                item.type == tempPoker.type &&
+                                item.value == tempPoker.value
+                            )
+                        })
+                        this.pokers[this.userInfo.user_id][tempIndex].belong = [
+                            -1, -1
+                        ]
+                    }
+                    //将牌放到该位置
+                    this.pokers[this.userInfo.user_id][order].belong = [
+                        index,
+                        i
+                    ]
+                    this.selectedPokers = []
+                }
+                //如果有多个则批量放入
+                else {
+                    //获取该组的牌
+                    let indexPokers = this.pokers[this.userInfo.user_id].filter(
+                        item => {
+                            return item.belong[0] == index
+                        }
+                    )
+                    //如果选择的牌数量大于剩下的位置数量
+                    if (selectedLength > 3 - indexPokers.length) {
+                        this.$util.msgbox('你所选择的牌过多')
+                        this.selectedPokers = []
+                        return
+                    }
+                    //遍历被选择的牌
+                    this.selectedPokers.forEach(item => {
+                        //每次都要重新获取该组的牌
+                        indexPokers = this.pokers[this.userInfo.user_id].filter(
+                            item => {
+                                return item.belong[0] == index
+                            }
+                        )
+                        //获取被选择的牌的序列
+                        const order = this.pokers[
+                            this.userInfo.user_id
+                        ].findIndex(p => {
+                            return item.value == p.value && item.type == p.type
+                        })
+                        //遍历三个位置
+                        for (let k = 0; k < 3; k++) {
+                            //判断位置是否有牌
+                            const isTake = indexPokers.some(p => {
+                                return p.belong[1] == k
+                            })
+                            //如果该位置没有牌
+                            if (!isTake) {
+                                this.pokers[this.userInfo.user_id][
+                                    order
+                                ].belong = [index, k]
+                                break
+                            }
+                        }
+                    })
+                    this.selectedPokers = []
+                }
+            }
+            //没有选择牌
+            else {
+                //有牌则移除
+                if (tempPoker) {
+                    //获取该位置的牌在数组的序列
+                    const tempIndex = this.pokers[
+                        this.userInfo.user_id
+                    ].findIndex(item => {
+                        return (
+                            item.type == tempPoker.type &&
+                            item.value == tempPoker.value
+                        )
+                    })
+                    this.pokers[this.userInfo.user_id][tempIndex].belong = [
+                        -1, -1
+                    ]
+                }
+            }
+        },
+        //触摸纸牌
+        pokerTouch(type, event) {
+            //按下
+            if (type == 0) {
+                const pageX = event.targetTouches[0].pageX
+                const pageY = event.targetTouches[0].pageY
+                this.touchPoints = [pageX, pageY]
+            }
+            //触摸移动
+            else if (type == 1) {
+                const pageX = event.targetTouches[0].pageX
+                const pageY = event.targetTouches[0].pageY
+                let poker = this.getTouchPokers(pageX)
+                if (poker) {
+                    poker.active = true
+                }
+            }
+            //松开
+            else {
+                const pageX = event.changedTouches[0].pageX
+                const pageY = event.changedTouches[0].pageY
+                //单击事件
+                if (
+                    pageX - this.touchPoints[0] == 0 &&
+                    pageY - this.touchPoints[1] == 0
+                ) {
+                    //如果该牌被选中则取消选中，如果没被选择那么就设置为选中
+                    let poker = this.getTouchPokers(this.touchPoints[0])
+                    if (poker) {
+                        const isSelected = this.selectedPokers.some(item => {
+                            return (
+                                item.type == poker.type &&
+                                item.value == poker.value
+                            )
+                        })
+                        if (isSelected) {
+                            this.selectedPokers = this.selectedPokers.filter(
+                                item => {
+                                    return (
+                                        item.type != poker.type ||
+                                        item.value != poker.value
+                                    )
+                                }
+                            )
+                        } else {
+                            this.selectedPokers.push({
+                                type: poker.type,
+                                value: poker.value
+                            })
+                        }
+                    }
+                }
+                //触摸移动事件
+                else {
+                    this.$refs.unGroupPokers.forEach(poker => {
+                        if (poker.active) {
+                            const isSelected = this.selectedPokers.some(
+                                item => {
+                                    return (
+                                        item.type == poker.type &&
+                                        item.value == poker.value
+                                    )
+                                }
+                            )
+                            //选中的则取消
+                            if (isSelected) {
+                                this.selectedPokers =
+                                    this.selectedPokers.filter(item => {
+                                        return (
+                                            item.type != poker.type ||
+                                            item.value != poker.value
+                                        )
+                                    })
+                            } else {
+                                this.selectedPokers.push({
+                                    type: poker.type,
+                                    value: poker.value
+                                })
+                            }
+                            poker.active = false
+                        }
+                    })
+                }
+            }
+        },
         //解散房间
         dissolution() {
             this.$util.confirm('确定要解散该房间吗？', r => {
@@ -277,7 +481,7 @@ export default {
                     this.pokers[this.userInfo.user_id][order].belong = [-1, -1]
                 }
             }
-            this.selectedPoker = null
+            this.selectedPokers = []
         },
         //确认配牌
         doConfirmPokers() {
@@ -295,28 +499,6 @@ export default {
                 content: '配牌完成',
                 pokers: this.pokers
             })
-        },
-        //将纸牌放入或者拿出组中
-        doInsert(index, i) {
-            const poker = this.singlePoker(index, i, this.userInfo.user_id)
-            //拿出
-            if (poker) {
-                const order = this.getIndex(poker)
-                this.pokers[this.userInfo.user_id][order].belong = [-1, -1]
-            }
-            //放入
-            else {
-                if (!this.selectedPoker) {
-                    return
-                }
-                const order = this.getIndex(this.selectedPoker)
-                this.pokers[this.userInfo.user_id][order].belong = [index, i]
-            }
-            this.selectedPoker = null
-        },
-        //选择牌
-        selectPoker(poker) {
-            this.selectedPoker = poker
         },
         //开始游戏
         startGame() {
@@ -573,6 +755,22 @@ export default {
                 newPokers[user.user_id] = pokers[user.user_id]
             })
             return newPokers
+        },
+        //获取手指经过的pokers
+        getTouchPokers(pageX) {
+            let poker = null
+            for (let pokerCmp of this.$refs.unGroupPokers) {
+                const placement = this.$dap.element.getElementBounding(
+                    pokerCmp.$el
+                )
+                if (
+                    pageX > placement.left &&
+                    pageX < placement.left + pokerCmp.$el.offsetWidth
+                ) {
+                    poker = pokerCmp
+                }
+            }
+            return poker
         }
     }
 }
@@ -626,12 +824,12 @@ export default {
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        width: 6rem;
+        width: 6.8rem;
         margin-bottom: 0.3rem;
-        margin-left: 0.3rem;
+        padding-left: 0.5rem;
 
         .app-poker {
-            margin-left: -0.3rem;
+            margin-left: -0.5rem;
         }
     }
 
@@ -660,12 +858,12 @@ export default {
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        width: 6rem;
+        width: 6.8rem;
         margin-top: 0.3rem;
-        margin-left: 0.3rem;
+        padding-left: 0.5rem;
 
         .app-poker {
-            margin-left: -0.3rem;
+            margin-left: -0.5rem;
         }
     }
 
@@ -694,12 +892,12 @@ export default {
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        width: 6rem;
+        width: 6.8rem;
         margin-bottom: 0.3rem;
-        margin-left: 0.3rem;
+        padding-left: 0.5rem;
 
         .app-poker {
-            margin-left: -0.3rem;
+            margin-left: -0.5rem;
         }
     }
 
@@ -728,12 +926,12 @@ export default {
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        width: 6rem;
+        width: 6.8rem;
         margin-bottom: 0.3rem;
-        margin-left: 0.3rem;
+        padding-left: 0.5rem;
 
         .app-poker {
-            margin-left: -0.3rem;
+            margin-left: -0.5rem;
         }
     }
 
@@ -765,7 +963,7 @@ export default {
 }
 .app-groups {
     display: block;
-    width: 5.6rem;
+    width: 5.8rem;
     background-color: @dark;
     border-radius: 0.12rem;
     padding: 0.4rem;
@@ -791,8 +989,8 @@ export default {
 
         .app-group-empty {
             display: block;
-            width: 0.96rem;
-            height: 1.18rem;
+            width: 1.2rem;
+            height: 1.54rem;
             background-color: @basic;
             border-radius: 0.12rem;
             position: relative;
