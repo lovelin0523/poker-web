@@ -236,18 +236,14 @@ export default {
     methods: {
         //解散房间
         dissolution() {
-            this.$confirm({
-                title: '提示',
-                message: '确定要解散该房间吗？',
-                callback: r => {
-                    if (r) {
-                        this.send({
-                            type: 8,
-                            room: this.roomId,
-                            user: this.userInfo,
-                            content: '解散房间'
-                        })
-                    }
+            this.$util.confirm('确定要解散该房间吗？', r => {
+                if (r) {
+                    this.send({
+                        type: 8,
+                        room: this.roomId,
+                        user: this.userInfo,
+                        content: '解散房间'
+                    })
                 }
             })
         },
@@ -259,10 +255,7 @@ export default {
         },
         //结束
         sendOver() {
-            this.$showToast({
-                type: 'loading',
-                message: '正在获取结果...'
-            })
+            this.$util.showLoading('正在获取结果...')
             //房主发送结束
             if (this.userInfo.user_id == this.room.room_creator) {
                 this.send({
@@ -280,7 +273,7 @@ export default {
                 this.sendOver()
                 return
             }
-            this.$msgbox('即将进入下一局', () => {
+            this.$util.msgbox('即将进入下一局', () => {
                 this.compare = false
                 //房主发送
                 if (this.userInfo.user_id == this.room.room_creator) {
@@ -333,7 +326,7 @@ export default {
                 return item.belong[0] == -1
             })
             if (flag) {
-                this.$msgbox('配牌还没有完成')
+                this.$util.msgbox('配牌还没有完成')
                 return
             }
             this.send({
@@ -369,7 +362,7 @@ export default {
         //开始游戏
         startGame() {
             if (this.users.length == 1) {
-                this.$msgbox('只有你一个人不能开始游戏噢')
+                this.$util.msgbox('只有你一个人不能开始游戏噢')
                 return
             }
             this.send({
@@ -388,10 +381,7 @@ export default {
                         room_id: this.roomId
                     },
                     beforeSend: () => {
-                        this.$showToast({
-                            type: 'loading',
-                            message: 'Loading...'
-                        })
+                        this.$util.showLoading('加载中...')
                     },
                     complete: () => {
                         this.$hideToast()
@@ -402,7 +392,7 @@ export default {
                         this.room = res.data
                         this.init()
                     } else if (res.state == 301) {
-                        this.$msgbox(res.message, () => {
+                        this.$util.msgbox(res.message, () => {
                             this.$router.replace({
                                 path: '/'
                             })
@@ -412,10 +402,7 @@ export default {
         },
         //初始化
         init() {
-            this.$showToast({
-                type: 'loading',
-                message: '正在连接...'
-            })
+            this.$util.showLoading('正在连接...')
             if ('WebSocket' in window) {
                 this.webSocket = new WebSocket(this.wsUrl)
                 this.webSocket.onerror = this.onError
@@ -424,12 +411,9 @@ export default {
                 this.webSocket.onclose = this.onClose
                 window.onbeforeunload = this.onBeforeUnload
             } else {
-                this.$alert({
-                    title: '无法连接到聊天室',
-                    message:
-                        '你当前使用的浏览器不支持webSocket，请更换现代浏览器！',
-                    ios: true
-                })
+                this.$util.alert(
+                    '无法连接，你当前使用的浏览器不支持webSocket，请更换现代浏览器！'
+                )
             }
         },
         //监听窗口关闭
@@ -441,14 +425,12 @@ export default {
         //连接发生错误的回调方法
         onError(code) {
             console.log('WebSocket连接发生错误', code)
-            this.$alert({
-                title: '提示',
-                ios: true,
-                message: '连接发生错误，点击下方确认按钮，刷新页面重新进入',
-                callback: () => {
+            this.$util.alert(
+                '连接发生错误，点击下方确认按钮，刷新页面重新进入',
+                () => {
                     location.reload(true)
                 }
-            })
+            )
         },
         //连接成功建立的回调方法
         onOpen() {
@@ -480,7 +462,7 @@ export default {
             const data = JSON.parse(event.data)
             //异常处理
             if (data.type == -1) {
-                this.$msgbox(data.content, () => {
+                this.$util.msgbox(data.content, () => {
                     if (data.data.needRefresh) {
                         if (this.webSocket) {
                             this.webSocket.close()
@@ -545,7 +527,7 @@ export default {
                 }
                 //如果全部配牌完成
                 if (data.data.hasAllComplete) {
-                    this.$msgbox('所有人都已经配好，即将进行比牌', () => {
+                    this.$util.msgbox('所有人都已经配好，即将进行比牌', () => {
                         this.completePlat()
                     })
                 }
@@ -593,15 +575,10 @@ export default {
             else if (data.type == 8) {
                 console.log('房间解散', data)
                 this.users = data.data.users
-                this.$alert({
-                    ios: true,
-                    title: '提示',
-                    message: '房间已解散',
-                    callback: () => {
-                        this.$router.replace({
-                            path: '/'
-                        })
-                    }
+                this.$util.alert('房间已解散', () => {
+                    this.$router.replace({
+                        path: '/'
+                    })
                 })
             }
         },
