@@ -212,7 +212,7 @@ export default {
                     return item.type == poker.type && item.value == poker.value
                 })
                 if (flag) {
-                    style.marginTop = '-0.6rem'
+                    style.transform = 'translateY(-0.3rem)'
                 }
                 return style
             }

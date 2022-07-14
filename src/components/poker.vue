@@ -192,7 +192,7 @@ export default {
     overflow: hidden;
     border-radius: 0.06rem;
     border: 1px solid #ddd;
-    transition: margin-top 300ms;
+    transition: all 300ms;
     z-index: 10;
 }
 
