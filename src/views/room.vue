@@ -818,7 +818,7 @@ export default {
     left: 50%;
     transform: translateX(-50%);
     padding: 0.2rem;
-    z-index: 10;
+    z-index: 20;
 
     .app-pokers {
         display: flex;
@@ -852,7 +852,7 @@ export default {
     left: 50%;
     transform: translateX(-50%);
     padding: 0.2rem;
-    z-index: 10;
+    z-index: 16;
 
     .app-pokers {
         display: flex;
@@ -886,7 +886,7 @@ export default {
     left: -2.8rem;
     transform: translateY(-50%) rotate(90deg);
     padding: 0.2rem;
-    z-index: 10;
+    z-index: 12;
 
     .app-pokers {
         display: flex;
