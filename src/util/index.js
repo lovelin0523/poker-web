@@ -1,6 +1,14 @@
 import store from '../store'
 import variables from '../assets/variables'
 export default {
+    notify(message, callback) {
+        store.getters.appVue.$showNotify({
+            message: message,
+            callback: callback,
+            timeout: 2000,
+            type: 'success'
+        })
+    },
     msgbox(message, callback) {
         store.getters.appVue.$msgbox({
             message: message,

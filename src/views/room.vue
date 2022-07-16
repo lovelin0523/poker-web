@@ -76,7 +76,7 @@
             </div>
         </div>
         <!-- 第四个 -->
-        <div v-if="otherUsers[2]" class="app-fouth" :style="{left:(currentGame>0&&pokers[otherUsers[1].user_id]) ? (status[otherUsers[2].user_id] == 1?'-1rem':'-2.2rem'):''}">
+        <div v-if="otherUsers[2]" class="app-fouth" :style="{left:(currentGame>0&&pokers[otherUsers[2].user_id]) ? (status[otherUsers[2].user_id] == 1?'-1rem':'-2.2rem'):''}">
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[2].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
@@ -123,10 +123,22 @@
                 <m-button :color="$var.dark" form-control @click="goBack">确认</m-button>
             </div>
         </m-modal>
+        <!-- 快捷短语 -->
+        <m-tooltip v-if="currentGame>0" ref="phrases" :color="$var.light" border-color="#fff" text-color="#fff" class="app-comments" :timeout="50" trigger="click" placement="top-end">
+            <m-button size="mini" :color="$var.light">
+                <span class="mvi-mx-2">
+                    <m-icon size="0.32rem" type="comment-o-alt"></m-icon>
+                </span>
+            </m-button>
+            <template v-slot:title>
+                <div @click="sendPhrase(item)" class="app-comment" v-for="(item,index) in phrases" :key="index">{{item}}</div>
+            </template>
+        </m-tooltip>
     </div>
 </template>
 
 <script>
+import pharses from '@/assets/pharses'
 import poker from '@/components/poker.vue'
 export default {
     name: 'room',
@@ -167,7 +179,9 @@ export default {
             //用户信息集合
             userInfos: [],
             //开始触摸坐标记录
-            touchPoints: [-1, -1]
+            touchPoints: [-1, -1],
+            //快捷短语
+            phrases: pharses
         }
     },
     components: {
@@ -248,8 +262,34 @@ export default {
     },
     mounted() {
         this.checkRoom()
+        this.$dap.event.on(document.body, 'click')
     },
     methods: {
+        //关闭消息弹窗
+        closePhrases(event) {
+            if (
+                this.$dap.element.isContains(
+                    this.$refs.phrases.$el,
+                    event.target
+                )
+            ) {
+                return
+            }
+            this.$refs.pharses.hideTooltip()
+        },
+        //发送快捷消息
+        sendPhrase(item) {
+            if (!item) {
+                return
+            }
+            this.send({
+                type: 9,
+                content: item,
+                room: this.roomId,
+                user: this.userInfo
+            })
+            this.$refs.phrases.hideTooltip()
+        },
         //放入或者移出纸牌
         insertOrRemove(index, i) {
             //获取选择的牌的长度
@@ -455,6 +495,10 @@ export default {
         },
         //解散房间
         dissolution() {
+            if (this.room && this.userInfo.user_id != this.room.room_creator) {
+                this.$util.msgbox('非房主无法解散房间')
+                return
+            }
             this.$util.confirm('确定要解散该房间吗？', r => {
                 if (r) {
                     this.send({
@@ -603,6 +647,7 @@ export default {
             const data = JSON.parse(event.data)
             //异常处理
             if (data.type == -1) {
+                console.log('异常回执', data)
                 this.$util.msgbox(data.content, () => {
                     if (data.data.needRefresh) {
                         if (this.webSocket) {
@@ -715,6 +760,14 @@ export default {
                         path: '/'
                     })
                 })
+            }
+            //接收快捷消息
+            else if (data.type == 9) {
+                console.log('接收消息', data)
+                this.users = data.data.users
+                this.$util.notify(
+                    `${data.data.belongUser.user_nickname}：${data.data.content}`
+                )
             }
         },
         //连接关闭的回调方法
@@ -942,9 +995,6 @@ export default {
         font-size: 0.32rem;
         color: #fff;
         width: 3rem;
-        background-color: #a51212;
-        padding: 0.1rem 0.2rem;
-        border-radius: 0.12rem;
         margin: 0 auto;
         position: relative;
         overflow: hidden;
@@ -1053,13 +1103,26 @@ export default {
         font-weight: bold;
     }
 }
-
 .app-end-footer {
     display: block;
     width: 100%;
 }
-
 .app-offline {
     opacity: 0.4;
+}
+.app-comments {
+    position: fixed;
+    right: 0.2rem;
+    bottom: 0.2rem;
+    z-index: 320;
+
+    .app-comment {
+        display: block;
+        width: 100%;
+        font-size: 0.28rem;
+        color: #fff;
+        padding: 0.2rem 0;
+        text-align: right;
+    }
 }
 </style>
