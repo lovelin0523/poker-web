@@ -80,7 +80,7 @@ export default {
             attendShow: false,
             attendRoomId: '',
             roomInfo: {
-                mode: 12
+                mode: 8
             },
             keyboard: false
         }

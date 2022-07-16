@@ -57,7 +57,7 @@
             </div>
         </div>
         <!-- 第三个 -->
-        <div v-if="otherUsers[1]" class="app-third" :style="{left:currentGame>0 ? (status[otherUsers[1].user_id] == 1?'-1.2rem':'-2.2rem'):''}">
+        <div v-if="otherUsers[1]" class="app-third" :style="{left:(currentGame>0&&pokers[otherUsers[1].user_id]) ? (status[otherUsers[1].user_id] == 1?'-1rem':'-2.2rem'):''}">
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[1].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
@@ -76,7 +76,7 @@
             </div>
         </div>
         <!-- 第四个 -->
-        <div v-if="otherUsers[2]" class="app-fouth" :style="{left:currentGame>0 ? (status[otherUsers[2].user_id] == 1?'-1.2rem':'-2.2rem'):''}">
+        <div v-if="otherUsers[2]" class="app-fouth" :style="{left:(currentGame>0&&pokers[otherUsers[1].user_id]) ? (status[otherUsers[2].user_id] == 1?'-1rem':'-2.2rem'):''}">
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[2].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
@@ -883,7 +883,7 @@ export default {
     display: block;
     position: absolute;
     top: 50%;
-    left: -2.8rem;
+    left: -3rem;
     transform: translateY(-50%) rotate(90deg);
     padding: 0.2rem;
     z-index: 12;
@@ -917,7 +917,7 @@ export default {
     display: block;
     position: absolute;
     top: 50%;
-    right: -2.8rem;
+    right: -3rem;
     transform: translateY(-50%) rotate(-90deg);
     padding: 0.2rem;
     z-index: 10;
