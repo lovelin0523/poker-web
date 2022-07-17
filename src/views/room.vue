@@ -262,7 +262,7 @@ export default {
     },
     mounted() {
         this.checkRoom()
-        this.$dap.event.on(document.body, 'click')
+        this.$dap.event.on(document.body, 'click.pharse', this.closePhrases)
     },
     methods: {
         //关闭消息弹窗
@@ -825,6 +825,9 @@ export default {
             }
             return poker
         }
+    },
+    beforeDestroy() {
+        this.$dap.event.off(document.body, 'click.pharse')
     }
 }
 </script>
