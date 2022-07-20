@@ -43,7 +43,11 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[0].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div :class="(isOnline(otherUsers[0])?'':'app-offline')">{{otherUsers[0].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[0].user_id])">({{isOnline(otherUsers[0])?scores[otherUsers[0].user_id]:'已离线'}})</span></div>
+                <div :class="(isOnline(otherUsers[0])?'':'app-offline')">
+                    {{otherUsers[0].user_nickname}}
+                    <span v-if="$dap.number.isNumber(scores[otherUsers[0].user_id])">({{isOnline(otherUsers[0])?scores[otherUsers[0].user_id]:'已离线'}})</span>
+                    <m-icon v-if="currentGame>0" @click="throwBall(otherUsers[0])" size="0.4rem" class="mvi-ml-2" url="/poker/ball.png"></m-icon>
+                </div>
             </div>
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[0].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
@@ -72,11 +76,16 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[1].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div :class="(isOnline(otherUsers[1])?'':'app-offline')">{{otherUsers[1].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[1].user_id])">({{isOnline(otherUsers[1])?scores[otherUsers[1].user_id]:'已离线'}})</span></div>
+                <div :class="(isOnline(otherUsers[1])?'':'app-offline')">
+                    <m-icon v-if="currentGame>0" @click="throwBall(otherUsers[1])" size="0.4rem" class="mvi-mr-2" url="/poker/ball.png"></m-icon>
+                    {{otherUsers[1].user_nickname}}
+                    <span v-if="$dap.number.isNumber(scores[otherUsers[1].user_id])">({{isOnline(otherUsers[1])?scores[otherUsers[1].user_id]:'已离线'}})</span>
+
+                </div>
             </div>
         </div>
         <!-- 第四个 -->
-        <div v-if="otherUsers[2]" class="app-fouth" :style="{left:(currentGame>0&&pokers[otherUsers[2].user_id]) ? (status[otherUsers[2].user_id] == 1?'-1rem':'-2.2rem'):''}">
+        <div v-if="otherUsers[2]" class="app-fouth" :style="{right:(currentGame>0&&pokers[otherUsers[2].user_id]) ? (status[otherUsers[2].user_id] == 1?'-1rem':'-2.2rem'):''}">
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[2].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
@@ -91,7 +100,11 @@
                 <m-overlay local :show="currentGame>0 && !pokers[otherUsers[2].user_id]">
                     <div class="app-wait">等待加入</div>
                 </m-overlay>
-                <div :class="(isOnline(otherUsers[2])?'':'app-offline')">{{otherUsers[2].user_nickname}}<span v-if="$dap.number.isNumber(scores[otherUsers[2].user_id])">({{isOnline(otherUsers[2])?scores[otherUsers[2].user_id]:'已离线'}})</span></div>
+                <div :class="(isOnline(otherUsers[2])?'':'app-offline')">
+                    {{otherUsers[2].user_nickname}}
+                    <span v-if="$dap.number.isNumber(scores[otherUsers[2].user_id])">({{isOnline(otherUsers[2])?scores[otherUsers[2].user_id]:'已离线'}})</span>
+                    <m-icon v-if="currentGame>0" @click="throwBall(otherUsers[2])" size="0.4rem" class="mvi-ml-2" url="/poker/ball.png"></m-icon>
+                </div>
             </div>
         </div>
         <!-- 操作界面 -->
@@ -100,21 +113,23 @@
                 <div class="app-group-empty" @click="insertOrRemove(index,i)" v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                     <poker v-if="singlePoker(index,i,userInfo.user_id)" :value="singlePoker(index,i,userInfo.user_id).value" :type="singlePoker(index,i,userInfo.user_id).type"></poker>
                 </div>
-                <m-button class="app-group-btn" @click="removeAll(index)" size="small" round :color="$var.darker">
-                    <m-icon type="times"></m-icon>
-                </m-button>
+                <div class="app-group-btn">
+                    <m-icon @click="moveUp(index)" :class="['mvi-mr-2',index==0?'disabled':'']" type="arrow-up"></m-icon>
+                    <m-icon @click="moveDown(index)" :class="['mvi-mr-2',index==2?'disabled':'']" type="arrow-down"></m-icon>
+                    <m-icon @click="removeAll(index)" type="times"></m-icon>
+                </div>
             </div>
-            <m-button @click="doConfirmPokers" class="mvi-mt-4" :color="$var.darker" form-control>确认</m-button>
+            <m-button :disabled="!isComplete" @click="doConfirmPokers" class="mvi-mt-6" :color="$var.darker" form-control>确认</m-button>
         </div>
         <!-- 比试结果界面 -->
-        <m-modal animation="fade" width="5.4rem" overlay-color="rgba(0,0,0,.6)" :modal-color="$var.basic" color="#ddd" v-model="resultShow" :title="'第'+ (group+1) +'组'" title-class="mvi-text-center mvi-font-h5" radius="0.4rem">
+        <m-modal :z-index="500" animation="fade" width="5.4rem" overlay-color="rgba(0,0,0,.6)" :modal-color="$var.basic" color="#ddd" v-model="resultShow" :title="'第'+ (group+1) +'组'" title-class="mvi-text-center mvi-font-h5" radius="0.4rem">
             <div v-for="(item,key,index) in tempScores" :key="index" class="app-result">
                 <div>{{showUser(key)?.user_nickname}}</div>
                 <div>{{item>0?'+':''}}{{item}}</div>
             </div>
         </m-modal>
         <!-- 本房间对局结束画面 -->
-        <m-modal animation="fade" width="5.4rem" overlay-color="rgba(0,0,0,.6)" :modal-color="$var.basic" color="#ddd" title="最终战绩" title-class="mvi-text-center" v-model="endShow">
+        <m-modal :z-index="600" animation="fade" width="5.4rem" overlay-color="rgba(0,0,0,.6)" :modal-color="$var.basic" color="#ddd" title="最终战绩" title-class="mvi-text-center" v-model="endShow">
             <div v-for="(item,key,index) in scores" :key="index" class="app-result">
                 <div>{{showUser(key)?.user_nickname}}</div>
                 <div>{{item>0?'+':''}}{{item}}</div>
@@ -124,14 +139,14 @@
             </div>
         </m-modal>
         <!-- 快捷短语 -->
-        <m-tooltip v-if="currentGame>0" ref="phrases" :color="$var.light" border-color="#fff" text-color="#fff" class="app-comments" :timeout="50" trigger="click" placement="top-end">
+        <m-tooltip v-if="currentGame>0" ref="pharses" :color="$var.dark" :border-color="$var.daker" text-color="#fff" class="app-comments" :timeout="50" trigger="click" placement="top-end">
             <m-button size="mini" :color="$var.light">
                 <span class="mvi-mx-2">
                     <m-icon size="0.32rem" type="comment-o-alt"></m-icon>
                 </span>
             </m-button>
             <template v-slot:title>
-                <div @click="sendPhrase(item)" class="app-comment" v-for="(item,index) in phrases" :key="index">{{item}}</div>
+                <div @click="sendPharses(item)" class="app-comment" v-for="(item,index) in pharses" :key="index">{{item}}</div>
             </template>
         </m-tooltip>
     </div>
@@ -181,7 +196,9 @@ export default {
             //开始触摸坐标记录
             touchPoints: [-1, -1],
             //快捷短语
-            phrases: pharses
+            pharses: pharses,
+            //是否配好牌
+            isComplete: false
         }
     },
     components: {
@@ -262,14 +279,140 @@ export default {
     },
     mounted() {
         this.checkRoom()
-        this.$dap.event.on(document.body, 'click.pharse', this.closePhrases)
+        this.$dap.event.on(document.body, 'click.pharse', this.closePharses)
     },
     methods: {
+        //球动画
+        ballAnimation(ball, left, top) {
+            setTimeout(() => {
+                ball.style.left = left
+                ball.style.top = top
+                setTimeout(() => {
+                    ball.style.opacity = 0
+                    setTimeout(() => {
+                        ball.remove()
+                    }, 200)
+                }, 400)
+            }, 50)
+        },
+        //执行丢球动画
+        doThrowBallAnimation(selfUser, targetUser) {
+            //获取出球玩家序列
+            const selfIndex = this.otherUsers.findIndex(item => {
+                return item.user_id == selfUser.user_id
+            })
+            //生成一个球
+            const ball = this.$dap.element.string2dom(
+                `<div class="app-ball" data-index="${selfIndex}"></div>`
+            )
+            //加入页面
+            this.$el.appendChild(ball)
+            //获取目标玩家序列
+            const targetIndex = this.otherUsers.findIndex(item => {
+                return item.user_id == targetUser.user_id
+            })
+            let left = 0
+            let top = 0
+            //如果目标是第二个玩家
+            if (targetIndex == 0) {
+                left = 'calc(50% - 0.3rem)'
+                top = '0.6rem'
+            }
+            //如果目标是第三个玩家
+            else if (targetIndex == 1) {
+                left = '0.6rem'
+                top = 'calc(50% - 0.3rem)'
+            }
+            //如果目标是第四个玩家
+            else if (targetIndex == 2) {
+                left = 'calc(100% - 1.2rem)'
+                top = 'calc(50% - 0.3rem)'
+            }
+            //如果目标是我自己
+            else {
+                left = 'calc(50% - 0.3rem)'
+                top = 'calc(100% - 1.2rem)'
+            }
+            this.ballAnimation(ball, left, top)
+        },
+        //丢球
+        throwBall(targetUser) {
+            this.send({
+                type: 10,
+                room: this.roomId,
+                user: this.userInfo,
+                content: `推送丢球指令`,
+                targetUser: targetUser
+            })
+        },
+        //牌组下移
+        moveDown(index) {
+            //最后一组无法下移
+            if (index == 2) {
+                return
+            }
+            let nextIndex = index + 1
+            for (let i = 0; i < 3; i++) {
+                const poker = this.singlePoker(index, i, this.userInfo.user_id)
+                const nextPoker = this.singlePoker(
+                    nextIndex,
+                    i,
+                    this.userInfo.user_id
+                )
+                if (poker) {
+                    const order = this.getIndex(poker)
+                    this.pokers[this.userInfo.user_id][order].belong = [
+                        nextIndex,
+                        i
+                    ]
+                }
+                if (nextPoker) {
+                    const nextOrder = this.getIndex(nextPoker)
+                    this.pokers[this.userInfo.user_id][nextOrder].belong = [
+                        index,
+                        i
+                    ]
+                }
+            }
+        },
+        //牌组上移
+        moveUp(index) {
+            //第一组无法上移
+            if (index == 0) {
+                return
+            }
+            let prevIndex = index - 1
+            for (let i = 0; i < 3; i++) {
+                const poker = this.singlePoker(index, i, this.userInfo.user_id)
+                const prevPoker = this.singlePoker(
+                    prevIndex,
+                    i,
+                    this.userInfo.user_id
+                )
+                if (poker) {
+                    const order = this.getIndex(poker)
+                    this.pokers[this.userInfo.user_id][order].belong = [
+                        prevIndex,
+                        i
+                    ]
+                }
+                if (prevPoker) {
+                    const prevOrder = this.getIndex(prevPoker)
+                    this.pokers[this.userInfo.user_id][prevOrder].belong = [
+                        index,
+                        i
+                    ]
+                }
+            }
+        },
         //关闭消息弹窗
-        closePhrases(event) {
+        closePharses(event) {
+            if (!this.$refs.pharses || !this.$refs.pharses.$el) {
+                return
+            }
             if (
                 this.$dap.element.isContains(
-                    this.$refs.phrases.$el,
+                    this.$refs.pharses.$el,
                     event.target
                 )
             ) {
@@ -278,7 +421,7 @@ export default {
             this.$refs.pharses.hideTooltip()
         },
         //发送快捷消息
-        sendPhrase(item) {
+        sendPharses(item) {
             if (!item) {
                 return
             }
@@ -288,7 +431,7 @@ export default {
                 room: this.roomId,
                 user: this.userInfo
             })
-            this.$refs.phrases.hideTooltip()
+            this.$refs.pharses.hideTooltip()
         },
         //放入或者移出纸牌
         insertOrRemove(index, i) {
@@ -407,6 +550,10 @@ export default {
                     ]
                 }
             }
+            //更新配牌状态
+            this.isComplete = this.pokers[this.userInfo.user_id].every(item => {
+                return item.belong[0] != -1
+            })
         },
         //触摸纸牌
         pokerTouch(type, event) {
@@ -526,13 +673,18 @@ export default {
                 }
             }
             this.selectedPokers = []
+            //更新配牌状态
+            this.isComplete = this.pokers[this.userInfo.user_id].every(item => {
+                return item.belong[0] != -1
+            })
         },
         //确认配牌
         doConfirmPokers() {
-            const flag = this.pokers[this.userInfo.user_id].some(item => {
-                return item.belong[0] == -1
+            //更新配牌状态
+            this.isComplete = this.pokers[this.userInfo.user_id].every(item => {
+                return item.belong[0] != -1
             })
-            if (flag) {
+            if (!this.isComplete) {
                 this.$util.msgbox('配牌还没有完成')
                 return
             }
@@ -769,6 +921,15 @@ export default {
                     `${data.data.belongUser.user_nickname}：${data.data.content}`
                 )
             }
+            //接收丢球通知
+            else if (data.type == 10) {
+                console.log('接收丢球通知', data)
+                this.users = data.data.users
+                this.doThrowBallAnimation(
+                    data.data.selfUser,
+                    data.data.targetUser
+                )
+            }
         },
         //连接关闭的回调方法
         onClose() {
@@ -836,10 +997,12 @@ export default {
 .app-main {
     position: relative;
     height: 100%;
+    user-select: none;
+    -webkit-user-select: none;
 
     .app-room-start {
         position: absolute;
-        z-index: 20;
+        z-index: 120;
         left: 50%;
         top: 50%;
         margin-top: -3rem;
@@ -874,6 +1037,74 @@ export default {
     left: 50%;
     transform: translateX(-50%);
     padding: 0.2rem;
+    z-index: 100;
+
+    .app-pokers {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: 6.8rem;
+        margin-bottom: 0.3rem;
+        padding-left: 0.5rem;
+
+        .app-poker {
+            margin-left: -0.5rem;
+        }
+    }
+
+    .app-nickname {
+        display: block;
+        text-align: center;
+        font-weight: bold;
+        font-size: 0.32rem;
+        color: #fff;
+        width: 4rem;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+    }
+}
+.app-seconds {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.2rem;
+    z-index: 10;
+
+    .app-pokers {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: 6.8rem;
+        margin-top: 0.3rem;
+        padding-left: 0.5rem;
+
+        .app-poker {
+            margin-left: -0.5rem;
+        }
+    }
+
+    .app-nickname {
+        display: block;
+        text-align: center;
+        font-weight: bold;
+        font-size: 0.32rem;
+        color: #fff;
+        width: 4rem;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+    }
+}
+.app-third {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: -3rem;
+    transform: translateY(-50%) rotate(90deg);
+    padding: 0.2rem;
     z-index: 20;
 
     .app-pokers {
@@ -895,75 +1126,7 @@ export default {
         font-weight: bold;
         font-size: 0.32rem;
         color: #fff;
-        width: 3rem;
-        margin: 0 auto;
-        position: relative;
-        overflow: hidden;
-    }
-}
-.app-seconds {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.2rem;
-    z-index: 16;
-
-    .app-pokers {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        width: 6.8rem;
-        margin-top: 0.3rem;
-        padding-left: 0.5rem;
-
-        .app-poker {
-            margin-left: -0.5rem;
-        }
-    }
-
-    .app-nickname {
-        display: block;
-        text-align: center;
-        font-weight: bold;
-        font-size: 0.32rem;
-        color: #fff;
-        width: 3rem;
-        margin: 0 auto;
-        position: relative;
-        overflow: hidden;
-    }
-}
-.app-third {
-    display: block;
-    position: absolute;
-    top: 50%;
-    left: -3rem;
-    transform: translateY(-50%) rotate(90deg);
-    padding: 0.2rem;
-    z-index: 12;
-
-    .app-pokers {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        width: 6.8rem;
-        margin-bottom: 0.3rem;
-        padding-left: 0.5rem;
-
-        .app-poker {
-            margin-left: -0.5rem;
-        }
-    }
-
-    .app-nickname {
-        display: block;
-        text-align: center;
-        font-weight: bold;
-        font-size: 0.32rem;
-        color: #fff;
-        width: 3rem;
+        width: 4rem;
         margin: 0 auto;
         position: relative;
         overflow: hidden;
@@ -976,7 +1139,7 @@ export default {
     right: -3rem;
     transform: translateY(-50%) rotate(-90deg);
     padding: 0.2rem;
-    z-index: 10;
+    z-index: 15;
 
     .app-pokers {
         display: flex;
@@ -997,7 +1160,7 @@ export default {
         font-weight: bold;
         font-size: 0.32rem;
         color: #fff;
-        width: 3rem;
+        width: 4rem;
         margin: 0 auto;
         position: relative;
         overflow: hidden;
@@ -1016,7 +1179,7 @@ export default {
 }
 .app-groups {
     display: block;
-    width: 5.8rem;
+    width: 6.6rem;
     background-color: @dark;
     border-radius: 0.12rem;
     padding: 0.4rem;
@@ -1024,7 +1187,7 @@ export default {
     position: fixed;
     left: 50%;
     top: 50%;
-    z-index: 300;
+    z-index: 80;
     transform: translate(-50%, -50%);
 
     .app-group {
@@ -1032,9 +1195,9 @@ export default {
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        margin-bottom: 0.1rem;
+        margin-bottom: 0.2rem;
         position: relative;
-        padding-right: 1rem;
+        padding-right: 1.8rem;
 
         &:last-of-type {
             margin-bottom: 0;
@@ -1057,7 +1220,19 @@ export default {
 
         .app-group-btn {
             position: absolute;
-            right: 0;
+            right: -0.1rem;
+
+            .mvi-icon {
+                background-color: @darker;
+                color: @light;
+                padding: 0.1rem;
+                border-radius: 999rem;
+                font-size: 0.24rem;
+
+                &.disabled {
+                    opacity: 0.3;
+                }
+            }
         }
     }
 }
@@ -1117,15 +1292,61 @@ export default {
     position: fixed;
     right: 0.2rem;
     bottom: 0.2rem;
-    z-index: 320;
+    z-index: 120;
 
     .app-comment {
         display: block;
         width: 100%;
         font-size: 0.28rem;
         color: #fff;
-        padding: 0.2rem 0;
         text-align: right;
+        opacity: 0.8;
+        padding: 0.2rem 0.2rem;
+        user-select: none;
+
+        &:active {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+    }
+}
+
+.mvi-button[disabled] {
+    opacity: 0.3 !important;
+}
+
+/deep/ .app-ball {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 480;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: url(/poker/ball.png) no-repeat center;
+    background-size: cover;
+    transition: top 400ms linear, left 400ms linear, opacity 200ms linear;
+    -webkit-transition: top 400ms linear, left 400ms linear,
+        opacity 200ms linear;
+
+    &[data-index='-1'] {
+        left: calc(50% - 0.3rem);
+        top: calc(100% - 1.2rem);
+    }
+
+    &[data-index='0'] {
+        left: calc(50% - 0.3rem);
+        top: 0.6rem;
+    }
+
+    &[data-index='1'] {
+        left: 0.6rem;
+        top: calc(50% - 0.3rem);
+    }
+
+    &[data-index='2'] {
+        left: calc(100% - 1.2rem);
+        top: calc(50% - 0.3rem);
     }
 }
 </style>

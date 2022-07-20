@@ -20,7 +20,7 @@
                 </div>
             </m-cell>
             <m-cell class="app-cell" title-class="mvi-font-h6" :active="false" title="注册时间" :content="format(userInfo.user_register)" content-class="app-cell-content"></m-cell>
-            <m-cell class="app-cell" title-class="mvi-font-h6" content-class="app-cell-content" :active="false" title="上次登录" :content="format(userInfo.user_login)"></m-cell>
+            <m-cell class="app-cell" title-class="mvi-font-h6" content-class="app-cell-content" :active="false" title="登录时间" :content="format(userInfo.user_login)"></m-cell>
         </m-panel>
         <m-button class="mvi-mb-4" size="large" :color="$var.dark" @click="roomShow=true" form-control>
             <m-icon type="home-alt" class="mvi-mr-1"></m-icon>创建房间
