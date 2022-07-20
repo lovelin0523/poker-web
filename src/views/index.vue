@@ -119,7 +119,7 @@ export default {
             this.keyboard = false
             this.attendShow = false
             if (!this.attendRoomId) {
-                this.$util.showError('房间号不能为空')
+                this.$util.msgbox('房间号不能为空')
                 return
             }
             this.$ruax
@@ -145,7 +145,7 @@ export default {
                             }
                         })
                     } else if (res.state == 301) {
-                        this.$util.showError(res.message)
+                        this.$util.msgbox(res.message)
                     }
                 })
         },
@@ -173,7 +173,7 @@ export default {
                             }
                         })
                     } else if (res.state == 301) {
-                        this.$util.showError(res.message)
+                        this.$util.msgbox(res.message)
                     }
                 })
         },
