@@ -45,7 +45,7 @@
             <m-form class="mvi-mt-8 mvi-mb-16" label-block block>
                 <m-form-el label="对局数：">
                     <div class="mvi-flex-between">
-                        <m-radio :fill-color="$var.basic" :label-color="$var.dark" :label="item+'局'" v-for="(item,index) in modeArray" :key="'mode-'+index" v-model="roomInfo.mode" :value="item"></m-radio>
+                        <m-radio :fill-color="$var.basic" :label-color="$var.dark" :label="item+'局'" v-for="(item,index) in modeArray" :key="'mode-'+index" v-model="roomMode" :value="item"></m-radio>
                     </div>
                 </m-form-el>
             </m-form>
@@ -75,13 +75,11 @@ export default {
                 user_password: '',
                 user_password2: ''
             },
-            modeArray: [3, 12, 16, 20],
+            modeArray: [8, 12, 16, 20],
             roomShow: false,
             attendShow: false,
             attendRoomId: '',
-            roomInfo: {
-                mode: 8
-            },
+            roomMode: 8,
             keyboard: false
         }
     },
@@ -155,7 +153,7 @@ export default {
                 .create({
                     url: this.$api.createRoom,
                     data: {
-                        room_mode: this.roomInfo.mode
+                        room_mode: this.roomMode
                     },
                     beforeSend: () => {
                         this.$util.showLoading('正在创建...')
