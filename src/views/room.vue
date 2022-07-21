@@ -198,7 +198,9 @@ export default {
             //快捷短语
             pharses: pharses,
             //是否配好牌
-            isComplete: false
+            isComplete: false,
+            //丢球次数
+            throwCounts: 0
         }
     },
     components: {
@@ -337,6 +339,11 @@ export default {
         },
         //丢球
         throwBall(targetUser) {
+            if (this.throwCounts >= 20) {
+                this.$util.msgbox('丢球丢多了容易累，歇会哈~')
+                return
+            }
+            this.throwCounts++
             this.send({
                 type: 10,
                 room: this.roomId,
@@ -895,6 +902,8 @@ export default {
                 this.compare = false
                 this.resultShow = false
                 this.$util.msgbox(`第${this.currentGame}局开始`)
+                //丢球次数清零
+                this.throwCounts = 0
             }
             //结束
             else if (data.type == 7) {
