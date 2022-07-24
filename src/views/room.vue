@@ -23,7 +23,7 @@
             <div class="app-pokers" @touchstart="pokerTouch(0,$event)" @touchmove="pokerTouch(1,$event)" @touchend="pokerTouch(2,$event)">
                 <poker ref="unGroupPokers" v-for="(item,index) in unGroupPokers(userInfo.user_id)" :key="index" :value="item.value" :type="item.type" :style="pokerStyle(item)"></poker>
             </div>
-            <div v-if="currentGame>0 && status[userInfo.user_id] == 1" class="app-prepare">
+            <div v-if="currentGame>0 && this.pokers[userInfo.user_id] && !isUnComplete(userInfo.user_id) && !showPlateDialog" class="app-prepare">
                 <div v-for="(item,index) in [1,2,3]" :key="'group-'+index">
                     <div v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                         <poker v-if="singlePoker(index,i,userInfo.user_id)" :value="singlePoker(index,i,userInfo.user_id).value" :type="singlePoker(index,i,userInfo.user_id).type"></poker>
@@ -52,7 +52,7 @@
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[0].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
-            <div v-if="currentGame>0 && status[otherUsers[0].user_id] == 1" class="app-prepare">
+            <div v-if="currentGame>0 && this.pokers[otherUsers[0].user_id] && !isUnComplete(otherUsers[0].user_id)" class="app-prepare">
                 <div v-for="(item,index) in [1,2,3]" :key="'group-'+index">
                     <div v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                         <poker :cover="!compare" v-if="singlePoker(index,i,otherUsers[0].user_id)" :value="singlePoker(index,i,otherUsers[0].user_id).value" :type="singlePoker(index,i,otherUsers[0].user_id).type"></poker>
@@ -61,11 +61,11 @@
             </div>
         </div>
         <!-- 第三个 -->
-        <div v-if="otherUsers[1]" class="app-third" :style="{left:(currentGame>0&&pokers[otherUsers[1].user_id]) ? (status[otherUsers[1].user_id] == 1?'-1rem':'-2.2rem'):''}">
+        <div v-if="otherUsers[1]" class="app-third" :style="{left:(currentGame>0&&pokers[otherUsers[1].user_id]) ? (!isUnComplete(otherUsers[1].user_id)?'-1rem':'-2.2rem'):''}">
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[1].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
-            <div v-if="currentGame>0 && status[otherUsers[1].user_id] == 1" class="app-prepare">
+            <div v-if="currentGame>0 && this.pokers[otherUsers[1].user_id] && !isUnComplete(otherUsers[1].user_id)" class="app-prepare">
                 <div v-for="(item,index) in [1,2,3]" :key="'group-'+index">
                     <div v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                         <poker :cover="!compare" v-if="singlePoker(index,i,otherUsers[1].user_id)" :value="singlePoker(index,i,otherUsers[1].user_id).value" :type="singlePoker(index,i,otherUsers[1].user_id).type"></poker>
@@ -85,11 +85,11 @@
             </div>
         </div>
         <!-- 第四个 -->
-        <div v-if="otherUsers[2]" class="app-fouth" :style="{right:(currentGame>0&&pokers[otherUsers[2].user_id]) ? (status[otherUsers[2].user_id] == 1?'-1rem':'-2.2rem'):''}">
+        <div v-if="otherUsers[2]" class="app-fouth" :style="{right:(currentGame>0&&pokers[otherUsers[2].user_id]) ? (!isUnComplete(otherUsers[2].user_id)?'-1rem':'-2.2rem'):''}">
             <div class="app-pokers">
                 <poker cover v-for="(item,index) in unGroupPokers(otherUsers[2].user_id)" :key="index" :value="item.value" :type="item.type"></poker>
             </div>
-            <div v-if="currentGame>0 && status[otherUsers[2].user_id] == 1" class="app-prepare">
+            <div v-if="currentGame>0 && this.pokers[otherUsers[2].user_id] && !isUnComplete(otherUsers[2].user_id)" class="app-prepare">
                 <div v-for="(item,index) in [1,2,3]" :key="'group-'+index">
                     <div v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                         <poker :cover="!compare" v-if="singlePoker(index,i,otherUsers[2].user_id)" :value="singlePoker(index,i,otherUsers[2].user_id).value" :type="singlePoker(index,i,otherUsers[2].user_id).type"></poker>
@@ -108,7 +108,7 @@
             </div>
         </div>
         <!-- 操作界面 -->
-        <div v-if="currentGame>0 && status[userInfo.user_id] == 0 && pokers[userInfo.user_id]" class="app-groups">
+        <div v-if="showPlateDialog" class="app-groups">
             <div v-for="(item,index) in [1,2,3]" :key="'group-'+index" class="app-group">
                 <div class="app-group-empty" @click="insertOrRemove(index,i)" v-for="(emp,i) in [1,2,3]" :key="'group-'+index+'-'+i">
                     <poker v-if="singlePoker(index,i,userInfo.user_id)" :value="singlePoker(index,i,userInfo.user_id).value" :type="singlePoker(index,i,userInfo.user_id).type"></poker>
@@ -119,7 +119,7 @@
                     <m-icon @click="removeAll(index)" type="times"></m-icon>
                 </div>
             </div>
-            <m-button :disabled="!isComplete" @click="doConfirmPokers" class="mvi-mt-6" :color="$var.darker" form-control>确认</m-button>
+            <m-button :disabled="isUnComplete(userInfo.user_id)" @click="doConfirmPokers" class="mvi-mt-6" :color="$var.darker" form-control>确认</m-button>
         </div>
         <!-- 比试结果界面 -->
         <m-modal :z-index="500" animation="fade" width="5.4rem" overlay-color="rgba(0,0,0,.6)" :modal-color="$var.basic" color="#ddd" v-model="resultShow" :title="'第'+ (group+1) +'组'" title-class="mvi-text-center mvi-font-h5" radius="0.4rem">
@@ -138,6 +138,12 @@
                 <m-button :color="$var.dark" form-control @click="goBack">确认</m-button>
             </div>
         </m-modal>
+        <!-- 再次确认按钮 -->
+        <m-button size="mini" @click="reload" v-if="currentGame>0" class="app-reload" :color="$var.light">
+            <span class="mvi-mx-2">
+                <m-icon size="0.32rem" type="refresh"></m-icon>
+            </span>
+        </m-button>
         <!-- 快捷短语 -->
         <m-tooltip v-if="currentGame>0" ref="pharses" :color="$var.dark" :border-color="$var.daker" text-color="#fff" class="app-comments" :timeout="50" trigger="click" placement="top-end">
             <m-button size="mini" :color="$var.light">
@@ -173,8 +179,6 @@ export default {
             users: [],
             //手牌集合
             pokers: {},
-            //状态集合，0表示配牌中，1表示已完成配牌
-            status: {},
             //积分集合
             scores: {},
             //当前局数，0表示还没有开始
@@ -197,10 +201,10 @@ export default {
             touchPoints: [-1, -1],
             //快捷短语
             pharses: pharses,
-            //是否配好牌
-            isComplete: false,
             //丢球次数
-            throwCounts: 0
+            throwCounts: 0,
+            //是否显示配牌弹窗
+            showPlateDialog: false
         }
     },
     components: {
@@ -277,6 +281,14 @@ export default {
                     return item.user_id == user.user_id
                 })
             }
+        },
+        //是否未完成配牌
+        isUnComplete() {
+            return key => {
+                return this.pokers[key].some(item => {
+                    return item.belong[0] == -1
+                })
+            }
         }
     },
     mounted() {
@@ -284,6 +296,22 @@ export default {
         this.$dap.event.on(document.body, 'click.pharse', this.closePharses)
     },
     methods: {
+        //刷新页面
+        reload() {
+            this.$router.go(0)
+        },
+        //配牌弹窗显示控制
+        controlPlateDialog() {
+            if (
+                this.currentGame > 0 &&
+                this.pokers[this.userInfo.user_id] &&
+                this.isUnComplete(this.userInfo.user_id)
+            ) {
+                this.showPlateDialog = true
+            } else {
+                this.showPlateDialog = false
+            }
+        },
         //球动画
         ballAnimation(ball, left, top) {
             setTimeout(() => {
@@ -557,10 +585,6 @@ export default {
                     ]
                 }
             }
-            //更新配牌状态
-            this.isComplete = this.pokers[this.userInfo.user_id].every(item => {
-                return item.belong[0] != -1
-            })
         },
         //触摸纸牌
         pokerTouch(type, event) {
@@ -680,18 +704,10 @@ export default {
                 }
             }
             this.selectedPokers = []
-            //更新配牌状态
-            this.isComplete = this.pokers[this.userInfo.user_id].every(item => {
-                return item.belong[0] != -1
-            })
         },
         //确认配牌
         doConfirmPokers() {
-            //更新配牌状态
-            this.isComplete = this.pokers[this.userInfo.user_id].every(item => {
-                return item.belong[0] != -1
-            })
-            if (!this.isComplete) {
+            if (this.isUnComplete(this.userInfo.user_id)) {
                 this.$util.msgbox('配牌还没有完成')
                 return
             }
@@ -826,7 +842,6 @@ export default {
             else if (data.type == 1) {
                 console.log('加入房间通知', data)
                 this.users = data.data.users
-                this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
                 this.userInfos = data.data.userInfos || []
@@ -834,6 +849,8 @@ export default {
                 //如果是我自己加入房间的通知
                 if (data.data.isSelf) {
                     this.pokers = pokers
+                    //判断是否需要展示配牌弹窗
+                    this.controlPlateDialog()
                 } else {
                     this.pokers = this.updateOtherPokers(pokers)
                 }
@@ -842,7 +859,6 @@ export default {
             else if (data.type == 2) {
                 console.log('离开房间通知', data)
                 this.users = data.data.users
-                this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
                 const pokers = data.data.pokers || {}
@@ -854,22 +870,24 @@ export default {
                 console.log('游戏开始', data)
                 this.users = data.data.users
                 this.pokers = data.data.pokers || {}
-                this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
                 this.userInfos = data.data.userInfos || []
+                //判断是否需要展示配牌弹窗
+                this.controlPlateDialog()
             }
             //配牌完成
             else if (data.type == 4) {
                 console.log('配牌完成', data)
                 this.users = data.data.users
-                this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
                 const pokers = data.data.pokers || {}
                 //如果是自己配牌完成了
                 if (data.data.isSelf) {
                     this.pokers = pokers
+                    //判断是否需要展示配牌弹窗
+                    this.controlPlateDialog()
                 } else {
                     this.pokers = this.updateOtherPokers(pokers)
                 }
@@ -884,7 +902,6 @@ export default {
                 console.log('比试完成', data)
                 this.users = data.data.users
                 this.pokers = data.data.pokers || {}
-                this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
                 this.group = data.data.group || 0
@@ -896,7 +913,6 @@ export default {
                 console.log('下一局开始', data)
                 this.users = data.data.users
                 this.pokers = data.data.pokers || {}
-                this.status = data.data.status || {}
                 this.currentGame = data.data.currentGame || 0
                 this.scores = data.data.scores || {}
                 this.compare = false
@@ -904,6 +920,8 @@ export default {
                 this.$util.msgbox(`第${this.currentGame}局开始`)
                 //丢球次数清零
                 this.throwCounts = 0
+                //判断是否需要展示配牌弹窗
+                this.controlPlateDialog()
             }
             //结束
             else if (data.type == 7) {
@@ -1196,7 +1214,7 @@ export default {
     position: fixed;
     left: 50%;
     top: 50%;
-    z-index: 80;
+    z-index: 180;
     transform: translate(-50%, -50%);
 
     .app-group {
@@ -1296,6 +1314,12 @@ export default {
 }
 .app-offline {
     opacity: 0.4;
+}
+.app-reload {
+    position: fixed;
+    left: 0.2rem;
+    bottom: 0.2rem;
+    z-index: 120;
 }
 .app-comments {
     position: fixed;
